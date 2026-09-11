@@ -1,0 +1,42 @@
+# Environment variables & credentials (NEVER commit to version control)
+.env
+.env.*
+*.env
+!.env.example
+
+# Node dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs & caches
+dist/
+build/
+out/
+.turbo/
+.cache/
+.vite/
+*.tsbuildinfo
+
+# Uploads & local data
+uploads/
+storage/
+*.local
+
+# OS & Editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Database dumps & test artifacts
+*.sql.gz
+*.dump
+coverage/
+.nyc_output/

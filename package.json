@@ -1,0 +1,30 @@
+{
+  "name": "minge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minge — Multiplayer AI Platform (Prompt IDE + AI Canvas)",
+  "workspaces": [
+    "packages/*",
+    "services/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "dev:api": "npm run dev --workspace=services/backend-api",
+    "dev:sync": "npm run dev --workspace=services/sync-server",
+    "dev:web": "npm run dev --workspace=apps/web",
+    "dev": "concurrently \"npm:dev:api\" \"npm:dev:sync\" \"npm:dev:web\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "db:migrate": "npm run migrate --workspace=services/backend-api"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

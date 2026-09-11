@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: minge-postgres
+    environment:
+      POSTGRES_USER: minge
+      POSTGRES_PASSWORD: minge_dev_password
+      POSTGRES_DB: minge
+    ports:
+      - "5432:5432"
+    volumes:
+      - minge_pgdata:/var/lib/postgresql/data
+      - ./services/backend-api/src/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U minge -d minge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  minge_pgdata:

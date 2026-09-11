@@ -1,0 +1,27 @@
+{
+  "name": "@minge/sync-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@minge/shared": "*",
+    "dotenv": "^16.4.5",
+    "pg": "^8.12.0",
+    "ws": "^8.18.0",
+    "yjs": "^13.6.18",
+    "y-protocols": "^1.0.6",
+    "lib0": "^0.2.97"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.11.6",
+    "@types/ws": "^8.5.12",
+    "tsx": "^4.16.2",
+    "typescript": "^5.4.5"
+  }
+}
