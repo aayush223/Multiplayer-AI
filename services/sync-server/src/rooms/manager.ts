@@ -8,14 +8,19 @@
  * Invariant 3: AI edits as a collaborative peer via Yjs updates.
  */
 import * as Y from 'yjs';
+import * as awarenessProtocol from 'y-protocols/awareness';
 import { parseRoomId } from '@minge/shared';
+
+export type RoomConnection = WebSocket | { send: (data: Uint8Array) => void; readyState: number };
 
 export interface ManagedRoom {
   doc: Y.Doc;
+  awareness: awarenessProtocol.Awareness;
   roomId: string;
   projectId: string;
   documentId: string;
-  connections: Set<WebSocket | { send: (data: Uint8Array) => void; readyState: number }>;
+  connections: Set<RoomConnection>;
+  connControlledIds: Map<RoomConnection, Set<number>>;
   updateCount: number;
   isDirty: boolean;
   lastSnapshotAt: number;
@@ -38,12 +43,17 @@ export function getOrCreateRoom(roomId: string): ManagedRoom {
   const { projectId, documentId } = parseRoomId(roomId);
 
   const doc = new Y.Doc();
+  const awareness = new awarenessProtocol.Awareness(doc);
+  awareness.setLocalState(null);
+
   room = {
     doc,
+    awareness,
     roomId,
     projectId,
     documentId,
     connections: new Set(),
+    connControlledIds: new Map(),
     updateCount: 0,
     isDirty: false,
     lastSnapshotAt: Date.now(),
@@ -64,28 +74,37 @@ export function getOrCreateRoom(roomId: string): ManagedRoom {
  */
 export function addConnection(
   roomId: string,
-  conn: WebSocket | { send: (data: Uint8Array) => void; readyState: number }
+  conn: RoomConnection
 ): ManagedRoom {
   const room = getOrCreateRoom(roomId);
   room.connections.add(conn);
+  if (!room.connControlledIds.has(conn)) {
+    room.connControlledIds.set(conn, new Set());
+  }
   return room;
 }
 
 /**
- * Remove a connection from a room.
- * If the room has no connections left, mark it for potential cleanup.
+ * Remove a connection from a room and clean up its awareness states.
  */
 export function removeConnection(
   roomId: string,
-  conn: WebSocket | { send: (data: Uint8Array) => void; readyState: number }
-): void {
+  conn: RoomConnection
+): number[] {
   const room = rooms.get(roomId);
-  if (!room) return;
+  if (!room) return [];
 
   room.connections.delete(conn);
+  const controlledIds = room.connControlledIds.get(conn);
+  room.connControlledIds.delete(conn);
 
-  // If no more connections, keep the room alive for a short period
-  // (don't destroy immediately, another client may reconnect)
+  if (controlledIds && controlledIds.size > 0) {
+    const ids = Array.from(controlledIds);
+    awarenessProtocol.removeAwarenessStates(room.awareness, ids, null);
+    return ids;
+  }
+
+  return [];
 }
 
 /**
@@ -145,8 +164,12 @@ export function getActiveRooms(): ManagedRoom[] {
 export function destroyRoom(roomId: string): void {
   const room = rooms.get(roomId);
   if (room) {
+    if (room.awareness._checkInterval) {
+      clearInterval(room.awareness._checkInterval);
+    }
     room.doc.destroy();
     room.connections.clear();
+    room.connControlledIds.clear();
     rooms.delete(roomId);
   }
 }

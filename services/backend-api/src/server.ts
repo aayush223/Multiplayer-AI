@@ -28,6 +28,9 @@ import { projectRoutes } from './routes/projects.js';
 import { memoryRoutes } from './routes/memories.js';
 import { promptRoutes } from './routes/prompts.js';
 import { proxyRoutes } from './routes/proxy.js';
+import { registerAiGenerateRoutes } from './routes/ai-generate.js';
+import { authRoutes } from './routes/auth.js';
+import { registerCrmRoutes } from './routes/crm.js';
 
 async function main() {
   // ──────────────────────────────────────────────────
@@ -52,12 +55,14 @@ async function main() {
   await app.register(cors, {
     origin: [
       'http://localhost:5173', // Vite dev server (AI Canvas)
+      'http://127.0.0.1:5173', // Vite dev server loopback
+      'http://localhost:4173', // Vite preview server
       'http://localhost:3000', // Backend self
       /\.minge\.dev$/,        // Production domains
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-User-Id', 'X-Project-Id'],
   });
 
   // Rate limiting (Invariant 5: per-project rate limits)
@@ -101,7 +106,7 @@ async function main() {
   // 5. Auth token generation (development only)
   // ──────────────────────────────────────────────────
   app.post('/api/auth/token', async (request, reply) => {
-    const body = request.body as { userId: string; projectIds?: string[] };
+    const body = (request.body as { userId?: string; projectIds?: string[] } | undefined) ?? {};
     if (!body.userId) {
       return reply.status(400).send({ error: 'userId is required.' });
     }
@@ -115,10 +120,13 @@ async function main() {
   // ──────────────────────────────────────────────────
   // 6. Register API routes
   // ──────────────────────────────────────────────────
+  await app.register(authRoutes);
   await app.register(projectRoutes);
   await app.register(memoryRoutes);
   await app.register(promptRoutes);
   await app.register(proxyRoutes);
+  await registerAiGenerateRoutes(app);
+  await registerCrmRoutes(app);
 
   // ──────────────────────────────────────────────────
   // 7. Global error handler
@@ -126,9 +134,10 @@ async function main() {
   app.setErrorHandler((error, _request, reply) => {
     // Zod validation errors
     if (error.name === 'ZodError') {
+      const details = 'issues' in error ? (error as { issues: unknown }).issues : error.message;
       return reply.status(400).send({
         error: 'Validation Error',
-        details: JSON.parse(error.message),
+        details,
       });
     }
 
@@ -142,7 +151,7 @@ async function main() {
 
     // Generic errors
     app.log.error(error);
-    reply.status(error.statusCode ?? 500).send({
+    return reply.status(error.statusCode ?? 500).send({
       error: error.name || 'Internal Server Error',
       message: error.message,
     });

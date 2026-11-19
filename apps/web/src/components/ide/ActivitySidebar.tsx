@@ -12,15 +12,7 @@ import {
   Search,
   Plus,
   TrendingUp,
-  CheckCircle2,
   Clock,
-  ChevronDown,
-  ChevronRight,
-  ShieldCheck,
-  Tag,
-  Copy,
-  ExternalLink,
-  Sparkles,
 } from 'lucide-react';
 import { PromptPackage, MemoryItem, PromptPullRequest } from '../../services/apiClient';
 
@@ -84,10 +76,10 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
   return (
     <aside
       style={{
-        width: 270,
+        width: 280,
         height: '100%',
-        backgroundColor: 'var(--bg-secondary)',
-        borderRight: '1px solid var(--border-subtle)',
+        backgroundColor: 'var(--color-surface-10)',
+        borderRight: '1px solid var(--color-neutral)',
         display: 'flex',
         flexDirection: 'column',
         userSelect: 'none',
@@ -102,25 +94,26 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
           {/* Header */}
           <div
             style={{
-              padding: '12px 14px',
-              borderBottom: '1px solid var(--border-subtle)',
+              padding: '14px 16px',
+              borderBottom: '1px solid var(--color-neutral)',
+              backgroundColor: 'var(--color-surface)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Files size={15} color="var(--neon-cyan)" />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
-                Explorer: Workspace
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Files size={15} color="var(--color-primary)" />
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface)' }}>
+                Workspace Explorer
               </span>
             </div>
-            <span style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 600 }}>
+            <span className="adobe-chip" style={{ fontSize: 11, padding: '2px 8px' }}>
               proj-alpha
             </span>
           </div>
 
-          <div style={{ padding: '8px 10px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ padding: '12px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
             {/* Folder: prompts/ */}
             <div>
               <div
@@ -129,27 +122,27 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  padding: '5px 6px',
-                  borderRadius: 5,
+                  padding: '6px 8px',
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'var(--color-on-surface)',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFEFEF')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                {openFolders.prompts ? <FolderOpen size={14} color="#0284c7" /> : <Folder size={14} color="#0284c7" />}
+                {openFolders.prompts ? <FolderOpen size={15} color="var(--color-primary)" /> : <Folder size={15} color="var(--color-primary)" />}
                 <span>prompts</span>
-                <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                <span style={{ fontSize: 11, color: 'var(--color-primary-70)', marginLeft: 'auto' }}>
                   {promptPackages.length}
                 </span>
               </div>
 
               {openFolders.prompts && (
-                <div style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+                <div style={{ paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
                   {promptPackages.map((pkg) => {
-                    const isActive = activePackage.name === pkg.name;
+                    const isActive = activePackage.name === pkg.name && activePackage.branch === pkg.branch;
                     return (
                       <div
                         key={pkg.id}
@@ -157,18 +150,18 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 6,
-                          padding: '5px 8px',
-                          borderRadius: 5,
+                          gap: 8,
+                          padding: '7px 10px',
+                          borderRadius: 'var(--radius-md)',
                           cursor: 'pointer',
-                          fontSize: 11.5,
-                          backgroundColor: isActive ? '#f0f9ff' : 'transparent',
-                          color: isActive ? '#0284c7' : 'var(--text-secondary)',
-                          border: `1px solid ${isActive ? '#bae6fd' : 'transparent'}`,
-                          fontWeight: isActive ? 600 : 400,
+                          fontSize: 12,
+                          backgroundColor: isActive ? 'var(--color-surface)' : 'transparent',
+                          color: isActive ? 'var(--color-primary)' : 'var(--color-primary-70)',
+                          border: isActive ? '1.5px solid var(--color-primary)' : '1px solid transparent',
+                          fontWeight: isActive ? 700 : 400,
                         }}
                       >
-                        <FileCode size={13} color={isActive ? '#0284c7' : '#94a3b8'} />
+                        <FileCode size={14} color={isActive ? 'var(--color-secondary)' : 'var(--color-primary-40)'} />
                         <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {pkg.name}.prompt.json
                         </span>
@@ -180,57 +173,57 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
             </div>
 
             {/* Folder: config/ */}
-            <div style={{ marginTop: 4 }}>
+            <div style={{ marginTop: 6 }}>
               <div
                 onClick={() => toggleFolder('config')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  padding: '5px 6px',
-                  borderRadius: 5,
+                  padding: '6px 8px',
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'var(--color-on-surface)',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFEFEF')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                {openFolders.config ? <FolderOpen size={14} color="#7c3aed" /> : <Folder size={14} color="#7c3aed" />}
+                {openFolders.config ? <FolderOpen size={15} color="var(--color-primary-70)" /> : <Folder size={15} color="var(--color-primary-70)" />}
                 <span>config</span>
               </div>
 
               {openFolders.config && (
-                <div style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+                <div style={{ paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 6,
-                      padding: '5px 8px',
-                      borderRadius: 5,
+                      gap: 8,
+                      padding: '6px 10px',
+                      borderRadius: 'var(--radius-md)',
                       cursor: 'pointer',
-                      fontSize: 11.5,
-                      color: 'var(--text-secondary)',
+                      fontSize: 12,
+                      color: 'var(--color-primary-70)',
                     }}
                   >
-                    <Settings size={13} color="#7c3aed" />
+                    <Settings size={13} color="var(--color-primary-70)" />
                     <span>model_config.json</span>
                   </div>
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 6,
-                      padding: '5px 8px',
-                      borderRadius: 5,
+                      gap: 8,
+                      padding: '6px 10px',
+                      borderRadius: 'var(--radius-md)',
                       cursor: 'pointer',
-                      fontSize: 11.5,
-                      color: 'var(--text-secondary)',
+                      fontSize: 12,
+                      color: 'var(--color-primary-70)',
                     }}
                   >
-                    <FileText size={13} color="#94a3b8" />
+                    <FileText size={13} color="var(--color-primary-40)" />
                     <span>eval_matrix.json</span>
                   </div>
                 </div>
@@ -238,32 +231,32 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
             </div>
 
             {/* Folder: memories/ */}
-            <div style={{ marginTop: 4 }}>
+            <div style={{ marginTop: 6 }}>
               <div
                 onClick={() => toggleFolder('memories')}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
-                  padding: '5px 6px',
-                  borderRadius: 5,
+                  padding: '6px 8px',
+                  borderRadius: 'var(--radius-sm)',
                   cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--text-primary)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: 'var(--color-on-surface)',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#EFEFEF')}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                {openFolders.memories ? <FolderOpen size={14} color="#16a34a" /> : <Folder size={14} color="#16a34a" />}
+                {openFolders.memories ? <FolderOpen size={15} color="var(--color-primary)" /> : <Folder size={15} color="var(--color-primary)" />}
                 <span>memories (grounded)</span>
-                <span style={{ fontSize: 10, color: 'var(--text-muted)', marginLeft: 'auto' }}>
+                <span style={{ fontSize: 11, color: 'var(--color-primary-70)', marginLeft: 'auto' }}>
                   {memories.length}
                 </span>
               </div>
 
               {openFolders.memories && (
-                <div style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 2, marginTop: 2 }}>
+                <div style={{ paddingLeft: 16, display: 'flex', flexDirection: 'column', gap: 4, marginTop: 4 }}>
                   {memories.map((m) => (
                     <div
                       key={m.id}
@@ -271,17 +264,17 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 6,
-                        padding: '5px 8px',
-                        borderRadius: 5,
+                        gap: 8,
+                        padding: '6px 10px',
+                        borderRadius: 'var(--radius-md)',
                         cursor: 'pointer',
-                        fontSize: 11.5,
-                        color: 'var(--text-secondary)',
+                        fontSize: 12,
+                        color: 'var(--color-primary-70)',
                       }}
-                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f1f5f9')}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--color-surface)')}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
                     >
-                      <Database size={13} color="#16a34a" />
+                      <Database size={13} color="var(--color-primary)" />
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {m.id}.md
                       </span>
@@ -301,33 +294,24 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div
             style={{
-              padding: '12px 14px',
-              borderBottom: '1px solid var(--border-subtle)',
+              padding: '14px 16px',
+              borderBottom: '1px solid var(--color-neutral)',
+              backgroundColor: 'var(--color-surface)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <GitBranch size={15} color="var(--neon-cyan)" />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+              <GitBranch size={15} color="var(--color-primary)" />
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                 Prompt Branches
               </span>
             </div>
             <button
               onClick={onNewBranch}
-              style={{
-                background: '#f1f5f9',
-                border: '1px solid #e2e8f0',
-                borderRadius: 5,
-                color: 'var(--neon-cyan)',
-                padding: '3px 6px',
-                fontSize: 11,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-              }}
+              className="adobe-btn-dark"
+              style={{ height: 28, padding: '0 12px', fontSize: 12 }}
             >
               <Plus size={12} />
               <span>New</span>
@@ -335,8 +319,8 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
           </div>
 
           {/* Active Branch */}
-          <div style={{ padding: '10px 14px', background: '#ffffff', borderBottom: '1px solid var(--border-subtle)' }}>
-            <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          <div style={{ padding: '14px 16px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral)' }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary-70)', marginBottom: 8 }}>
               Current Workspace Branch
             </div>
             <div
@@ -344,28 +328,28 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: '#ffffff',
-                border: '1px solid var(--neon-cyan)',
-                borderRadius: 6,
-                padding: '6px 10px',
-                color: 'var(--neon-cyan)',
-                fontWeight: 600,
-                fontSize: 12,
+                background: 'var(--color-surface)',
+                border: '1.5px solid var(--color-primary)',
+                borderRadius: 'var(--radius-md)',
+                padding: '8px 12px',
+                color: 'var(--color-primary)',
+                fontWeight: 700,
+                fontSize: 13,
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 <span style={{ fontSize: 14 }}>⎇</span>
                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentBranch}</span>
               </div>
-              <span className="badge-neon-cyan" style={{ fontSize: 9, padding: '1px 5px' }}>
+              <span className="adobe-chip-red" style={{ fontSize: 10, padding: '2px 8px' }}>
                 HEAD
               </span>
             </div>
           </div>
 
           {/* Branch Tree */}
-          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+          <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary-70)' }}>
               Available Branches ({promptPackages.length})
             </div>
             {promptPackages.map((pkg) => {
@@ -374,22 +358,26 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
                 <div
                   key={pkg.branch}
                   onClick={() => onSelectBranch(pkg.branch)}
+                  className="adobe-card-interactive"
                   style={{
-                    padding: '8px 10px',
-                    borderRadius: 6,
-                    background: isSelected ? '#f0f9ff' : '#ffffff',
-                    border: `1px solid ${isSelected ? '#bae6fd' : 'var(--border-subtle)'}`,
+                    padding: '12px',
+                    background: 'var(--color-surface)',
+                    border: isSelected ? '1.5px solid var(--color-primary)' : '1px solid var(--color-neutral)',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: isSelected ? '#0284c7' : 'var(--text-primary)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                       {pkg.branch}
                     </span>
-                    <span style={{ fontSize: 10, color: '#16a34a', fontWeight: 600 }}>v{pkg.version}</span>
+                    <span
+                      className={isSelected ? 'adobe-chip-dark' : 'adobe-chip'}
+                      style={{ fontSize: 10, padding: '2px 8px' }}
+                    >
+                      v{pkg.version}
+                    </span>
                   </div>
-                  <div style={{ fontSize: 10.5, color: 'var(--text-muted)' }}>
+                  <div style={{ fontSize: 12, color: 'var(--color-primary-70)' }}>
                     {pkg.name} • {pkg.model_config.model}
                   </div>
                 </div>
@@ -406,64 +394,52 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div
             style={{
-              padding: '12px 14px',
-              borderBottom: '1px solid var(--border-subtle)',
+              padding: '14px 16px',
+              borderBottom: '1px solid var(--color-neutral)',
+              backgroundColor: 'var(--color-surface)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <GitPullRequest size={15} color="var(--neon-purple)" />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <GitPullRequest size={15} color="var(--color-primary)" />
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                 Prompt PRs ({activePrs.length})
               </span>
             </div>
           </div>
 
-          <div style={{ padding: '10px 12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             {activePrs.map((pr) => (
               <div
                 key={pr.id}
                 onClick={() => onSelectPr(pr)}
+                className="adobe-card-interactive"
                 style={{
-                  padding: '10px 12px',
-                  background: '#ffffff',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 8,
+                  padding: '12px',
                   cursor: 'pointer',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-                  transition: 'all 0.15s ease',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#7c3aed')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-surface)', lineHeight: '18px' }}>
                     #{pr.id.slice(-2)} {pr.title}
                   </span>
                   <span
-                    style={{
-                      fontSize: 9.5,
-                      fontWeight: 700,
-                      padding: '2px 6px',
-                      borderRadius: 4,
-                      backgroundColor: pr.status === 'merged' ? '#f0fdf4' : '#faf5ff',
-                      color: pr.status === 'merged' ? '#16a34a' : '#7c3aed',
-                      border: `1px solid ${pr.status === 'merged' ? '#bbf7d0' : '#e9d5ff'}`,
-                    }}
+                    className={pr.status === 'merged' ? 'adobe-chip-dark' : 'adobe-chip-red'}
+                    style={{ fontSize: 10, padding: '2px 8px', flexShrink: 0 }}
                   >
                     {pr.status === 'merged' ? 'Merged' : 'In Review'}
                   </span>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 6 }}>
+                <div style={{ fontSize: 12, color: 'var(--color-primary-70)', marginBottom: 8 }}>
                   {pr.sourceBranch} ➔ {pr.targetBranch}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10.5, fontWeight: 600 }}>
-                  <span style={{ color: '#16a34a', display: 'flex', alignItems: 'center', gap: 3 }}>
-                    <TrendingUp size={11} /> {pr.benchmarkDelta.accuracy}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, fontWeight: 700 }}>
+                  <span style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <TrendingUp size={12} color="var(--color-secondary)" /> {pr.benchmarkDelta.accuracy}
                   </span>
-                  <span style={{ color: 'var(--text-muted)' }}>{pr.author}</span>
+                  <span style={{ color: 'var(--color-primary-40)', fontWeight: 400 }}>{pr.author}</span>
                 </div>
               </div>
             ))}
@@ -478,34 +454,24 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div
             style={{
-              padding: '12px 14px',
-              borderBottom: '1px solid var(--border-subtle)',
+              padding: '14px 16px',
+              borderBottom: '1px solid var(--color-neutral)',
+              backgroundColor: 'var(--color-surface)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Database size={15} color="var(--neon-emerald)" />
-              <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Database size={15} color="var(--color-primary)" />
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                 Grounded Memories
               </span>
             </div>
             <button
               onClick={() => setIsAddingMemory(!isAddingMemory)}
-              style={{
-                background: '#f0fdf4',
-                border: '1px solid #bbf7d0',
-                borderRadius: 5,
-                color: '#16a34a',
-                padding: '3px 8px',
-                fontSize: 11,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 4,
-                fontWeight: 600,
-              }}
+              className="adobe-btn-dark"
+              style={{ height: 28, padding: '0 12px', fontSize: 12 }}
             >
               <Plus size={12} />
               <span>Ingest</span>
@@ -514,8 +480,17 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
 
           {/* Quick Add Memory Form */}
           {isAddingMemory && (
-            <div style={{ padding: 12, backgroundColor: '#ffffff', borderBottom: '1px solid var(--border-subtle)', display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+            <div
+              style={{
+                padding: 16,
+                backgroundColor: 'var(--color-surface)',
+                borderBottom: '1px solid var(--color-neutral)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 10,
+              }}
+            >
+              <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                 Ingest New Project Memory
               </div>
               <textarea
@@ -525,24 +500,29 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
                 rows={3}
                 style={{
                   width: '100%',
-                  padding: '6px 8px',
-                  borderRadius: 6,
-                  border: '1px solid var(--border-subtle)',
-                  fontSize: 11.5,
+                  padding: '10px 12px',
+                  borderRadius: 'var(--radius-md)',
+                  border: '1px solid var(--color-neutral)',
+                  fontSize: 13,
+                  color: 'var(--color-on-surface)',
+                  backgroundColor: 'var(--color-surface)',
                   outline: 'none',
                   resize: 'none',
                 }}
               />
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <select
                   value={newMemoryType}
                   onChange={(e) => setNewMemoryType(e.target.value as any)}
                   style={{
-                    fontSize: 10.5,
-                    padding: '3px 6px',
-                    borderRadius: 5,
-                    border: '1px solid var(--border-subtle)',
-                    color: 'var(--text-secondary)',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    padding: '6px 12px',
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid var(--color-neutral)',
+                    backgroundColor: 'var(--color-surface-10)',
+                    color: 'var(--color-on-surface)',
+                    outline: 'none',
                   }}
                 >
                   <option value="decision">Decision</option>
@@ -550,25 +530,18 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
                   <option value="code_snippet">Code Snippet</option>
                   <option value="document">Document</option>
                 </select>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <button
                     onClick={() => setIsAddingMemory(false)}
-                    style={{ background: 'none', border: 'none', fontSize: 11, color: 'var(--text-muted)', cursor: 'pointer' }}
+                    className="adobe-btn-link"
+                    style={{ fontSize: 12, color: 'var(--color-primary-70)' }}
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleCreateMemory}
-                    style={{
-                      background: '#16a34a',
-                      border: 'none',
-                      color: '#ffffff',
-                      borderRadius: 4,
-                      padding: '3px 8px',
-                      fontSize: 11,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                    }}
+                    className="adobe-btn-red"
+                    style={{ height: 30, padding: '0 14px', fontSize: 12 }}
                   >
                     Save
                   </button>
@@ -578,49 +551,33 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
           )}
 
           {/* Memories List */}
-          <div style={{ padding: '10px 12px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
+          <div style={{ padding: '14px 16px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary-70)' }}>
               Active Project Lineage ({memories.length})
             </div>
             {memories.map((mem) => (
               <div
                 key={mem.id}
                 onClick={() => onSelectMemory(mem)}
+                className="adobe-card-interactive"
                 style={{
-                  padding: '10px 12px',
-                  background: '#ffffff',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 6,
+                  padding: '12px',
                   cursor: 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 4,
-                  transition: 'all 0.15s ease',
+                  gap: 6,
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#16a34a')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
               >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span
-                    style={{
-                      fontSize: 9.5,
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      padding: '1px 5px',
-                      borderRadius: 3,
-                      backgroundColor: '#f0fdf4',
-                      color: '#16a34a',
-                      border: '1px solid #bbf7d0',
-                    }}
-                  >
-                    {mem.type}
+                  <span className="adobe-chip" style={{ fontSize: 11, padding: '2px 8px', textTransform: 'capitalize' }}>
+                    {mem.type.replace('_', ' ')}
                   </span>
-                  <span style={{ fontSize: 10, color: 'var(--neon-cyan)', fontWeight: 600 }}>v{mem.version}</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-secondary)', fontWeight: 700 }}>v{mem.version}</span>
                 </div>
-                <div style={{ fontSize: 11.5, color: 'var(--text-primary)', lineHeight: 1.45 }}>
+                <div style={{ fontSize: 12.5, color: 'var(--color-on-surface)', lineHeight: '18px' }}>
                   {mem.content}
                 </div>
-                <div style={{ fontSize: 9.5, color: 'var(--text-muted)', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--color-primary-40)', marginTop: 2 }}>
                   ID: {mem.id} • Isolation: Enforced
                 </div>
               </div>
@@ -628,26 +585,13 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
           </div>
 
           {/* 30-Day Recovery Vault link */}
-          <div style={{ padding: '10px 14px', borderTop: '1px solid var(--border-subtle)', backgroundColor: '#ffffff' }}>
+          <div style={{ padding: '12px 16px', borderTop: '1px solid var(--color-neutral)', backgroundColor: 'var(--color-surface)' }}>
             <button
               onClick={onOpenRecovery}
-              style={{
-                width: '100%',
-                padding: '6px 10px',
-                borderRadius: 6,
-                backgroundColor: '#f8fafc',
-                border: '1px solid var(--border-subtle)',
-                fontSize: 11,
-                fontWeight: 600,
-                color: 'var(--text-secondary)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
-              }}
+              className="adobe-btn-outline"
+              style={{ width: '100%', height: 36, fontSize: 12 }}
             >
-              <Clock size={12} />
+              <Clock size={13} />
               <span>30-Day Recovery Vault</span>
             </button>
           </div>
@@ -661,38 +605,40 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
           <div
             style={{
-              padding: '12px 14px',
-              borderBottom: '1px solid var(--border-subtle)',
+              padding: '14px 16px',
+              borderBottom: '1px solid var(--color-neutral)',
+              backgroundColor: 'var(--color-surface)',
               display: 'flex',
               alignItems: 'center',
-              gap: 6,
+              gap: 8,
             }}
           >
-            <Search size={15} color="var(--neon-cyan)" />
-            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+            <Search size={15} color="var(--color-primary)" />
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface)' }}>
               Semantic Search
             </span>
           </div>
 
-          <div style={{ padding: 12, borderBottom: '1px solid var(--border-subtle)', backgroundColor: '#ffffff' }}>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search vector embeddings & memories..."
-              style={{
-                width: '100%',
-                padding: '8px 10px',
-                borderRadius: 6,
-                border: '1px solid var(--border-subtle)',
-                fontSize: 12,
-                outline: 'none',
-              }}
-            />
+          <div style={{ padding: 14, borderBottom: '1px solid var(--color-neutral)', backgroundColor: 'var(--color-surface)' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <Search
+                size={15}
+                color="var(--color-primary-40)"
+                style={{ position: 'absolute', left: 14, pointerEvents: 'none' }}
+              />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search vector embeddings..."
+                className="adobe-input"
+                style={{ paddingLeft: 38, fontSize: 13 }}
+              />
+            </div>
           </div>
 
-          <div style={{ padding: '10px 12px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+          <div style={{ padding: '14px 16px', flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary-70)' }}>
               {searchQuery ? 'Ranked Vector Results' : 'Recent Project Context'}
             </div>
 
@@ -707,21 +653,21 @@ export const ActivitySidebar: React.FC<ActivitySidebarProps> = ({
                 <div
                   key={m.id}
                   onClick={() => onSelectMemory(m)}
+                  className="adobe-card-interactive"
                   style={{
-                    padding: '8px 10px',
-                    borderRadius: 6,
-                    background: '#ffffff',
-                    border: '1px solid var(--border-subtle)',
+                    padding: '12px',
                     cursor: 'pointer',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: '#0284c7' }}>[{m.type}]</span>
-                    <span style={{ fontSize: 10, color: '#16a34a', fontWeight: 600 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span className="adobe-chip" style={{ fontSize: 11, padding: '2px 8px', textTransform: 'capitalize' }}>
+                      {m.type.replace('_', ' ')}
+                    </span>
+                    <span className="adobe-chip-dark" style={{ fontSize: 10, padding: '2px 8px' }}>
                       {99 - idx * 3}% match
                     </span>
                   </div>
-                  <div style={{ fontSize: 11, color: 'var(--text-primary)' }}>
+                  <div style={{ fontSize: 12.5, color: 'var(--color-on-surface)', lineHeight: '18px' }}>
                     {m.content}
                   </div>
                 </div>

@@ -88,6 +88,28 @@ export async function promptRoutes(app: FastifyInstance): Promise<void> {
     }
   );
 
+  // List branches for a project (declared before :promptId to avoid route shadowing)
+  app.get<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/prompts/branches',
+    async (request, reply) => {
+      const { projectId } = request.params;
+
+      const results = await withProjectScope(projectId, async (client) => {
+        const res = await client.query(
+          `SELECT DISTINCT branch, COUNT(*) as prompt_count
+           FROM minge.prompt_packages
+           WHERE project_id = $1 AND deleted_at IS NULL AND superseded_by_id IS NULL
+           GROUP BY branch
+           ORDER BY branch`,
+          [projectId]
+        );
+        return res.rows;
+      });
+
+      reply.send({ data: results });
+    }
+  );
+
   // Get a single prompt package by ID
   app.get<{ Params: { projectId: string; promptId: string } }>(
     '/api/projects/:projectId/prompts/:promptId',
@@ -116,71 +138,92 @@ export async function promptRoutes(app: FastifyInstance): Promise<void> {
     async (request, reply) => {
       const userId = getUserId(request);
       const { projectId, promptId } = request.params;
-      const body = promptUpdateSchema.parse({ ...request.body as object, project_id: projectId });
+      const body = promptUpdateSchema.parse({ ...(request.body as object | undefined), project_id: projectId });
 
       const result = await withProjectScope(projectId, async (client) => {
-        await client.query('BEGIN');
+        // Fetch the active current version (atomic inside withProjectScope transaction)
+        const current = await client.query(
+          `SELECT * FROM minge.prompt_packages
+           WHERE id = $1 AND project_id = $2 AND superseded_by_id IS NULL AND deleted_at IS NULL`,
+          [promptId, projectId]
+        );
 
-        try {
-          // Fetch the current version
-          const current = await client.query(
-            `SELECT * FROM minge.prompt_packages
-             WHERE id = $1 AND project_id = $2 AND deleted_at IS NULL`,
-            [promptId, projectId]
-          );
-
-          if (current.rows.length === 0) {
-            await client.query('ROLLBACK');
-            return null;
-          }
-
-          const orig = current.rows[0] as Record<string, unknown>;
-          const newVersion = (orig['version'] as number) + 1;
-
-          // Insert the new version
-          const newRecord = await client.query(
-            `INSERT INTO minge.prompt_packages
-              (project_id, name, branch, system_prompt, user_template,
-               grounded_memory_ids, model_config, latest_output,
-               version, parent_id, status, created_by_user_id)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-             RETURNING *`,
-            [
-              projectId,
-              orig['name'],
-              orig['branch'],
-              body.system_prompt ?? orig['system_prompt'],
-              body.user_template ?? orig['user_template'],
-              body.grounded_memory_ids ?? orig['grounded_memory_ids'],
-              JSON.stringify(body.model_config ?? orig['model_config']),
-              body.latest_output ?? orig['latest_output'],
-              newVersion,
-              promptId, // parent_id points to the old version
-              body.status ?? orig['status'],
-              userId,
-            ]
-          );
-
-          // Mark old version as superseded
-          await client.query(
-            `UPDATE minge.prompt_packages SET superseded_by_id = $1
-             WHERE id = $2 AND project_id = $3`,
-            [newRecord.rows[0].id, promptId, projectId]
-          );
-
-          await client.query('COMMIT');
-          return newRecord.rows[0];
-        } catch (err) {
-          await client.query('ROLLBACK');
-          throw err;
+        if (current.rows.length === 0) {
+          return null;
         }
+
+        const orig = current.rows[0] as Record<string, unknown>;
+        const newVersion = (orig['version'] as number) + 1;
+
+        // Insert the new version
+        const newRecord = await client.query(
+          `INSERT INTO minge.prompt_packages
+            (project_id, name, branch, system_prompt, user_template,
+             grounded_memory_ids, model_config, latest_output,
+             version, parent_id, status, created_by_user_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+           RETURNING *`,
+          [
+            projectId,
+            orig['name'],
+            orig['branch'],
+            body.system_prompt ?? orig['system_prompt'],
+            body.user_template ?? orig['user_template'],
+            body.grounded_memory_ids ?? orig['grounded_memory_ids'],
+            JSON.stringify(body.model_config ?? orig['model_config']),
+            body.latest_output ?? orig['latest_output'],
+            newVersion,
+            promptId, // parent_id points to the old version
+            body.status ?? orig['status'],
+            userId,
+          ]
+        );
+
+        // Mark old version as superseded
+        await client.query(
+          `UPDATE minge.prompt_packages SET superseded_by_id = $1
+           WHERE id = $2 AND project_id = $3`,
+          [newRecord.rows[0].id, promptId, projectId]
+        );
+
+        return newRecord.rows[0];
       });
 
       if (!result) {
-        return reply.status(404).send({ error: 'Prompt not found or already deleted.' });
+        return reply.status(404).send({ error: 'Prompt not found, already superseded, or deleted.' });
       }
 
       reply.status(201).send({ data: result });
+    }
+  );
+
+  // Restore a soft-deleted prompt package within the 30-day recovery window (Invariant 6)
+  app.post<{ Params: { projectId: string; promptId: string } }>(
+    '/api/projects/:projectId/prompts/:promptId/restore',
+    async (request, reply) => {
+      const { projectId, promptId } = request.params;
+
+      const restored = await withProjectScope(projectId, async (client) => {
+        const res = await client.query(
+          `UPDATE minge.prompt_packages
+           SET deleted_at = NULL, updated_at = NOW()
+           WHERE id = $1
+             AND project_id = $2
+             AND deleted_at IS NOT NULL
+             AND deleted_at >= NOW() - INTERVAL '30 days'
+           RETURNING *`,
+          [promptId, projectId]
+        );
+        return res.rows[0] ?? null;
+      });
+
+      if (!restored) {
+        return reply.status(404).send({
+          error: 'Prompt not found, not deleted, or outside the 30-day recovery window.',
+        });
+      }
+
+      reply.send({ data: restored, message: 'Prompt restored successfully.' });
     }
   );
 
@@ -230,28 +273,6 @@ export async function promptRoutes(app: FastifyInstance): Promise<void> {
       }
 
       reply.send({ message: 'Prompt soft-deleted. Recoverable for 30 days.' });
-    }
-  );
-
-  // List branches for a project
-  app.get<{ Params: { projectId: string } }>(
-    '/api/projects/:projectId/prompts/branches',
-    async (request, reply) => {
-      const { projectId } = request.params;
-
-      const results = await withProjectScope(projectId, async (client) => {
-        const res = await client.query(
-          `SELECT DISTINCT branch, COUNT(*) as prompt_count
-           FROM minge.prompt_packages
-           WHERE project_id = $1 AND deleted_at IS NULL AND superseded_by_id IS NULL
-           GROUP BY branch
-           ORDER BY branch`,
-          [projectId]
-        );
-        return res.rows;
-      });
-
-      reply.send({ data: results });
     }
   );
 }

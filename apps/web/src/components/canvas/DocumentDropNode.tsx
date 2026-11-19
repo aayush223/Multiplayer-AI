@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { FileUp, Database, CheckCircle2, Trash2, GripVertical, FileText } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { FileUp, CheckCircle2, Trash2, GripVertical, FileText } from 'lucide-react';
 import { CanvasNodeData } from '../../hooks/useCrdtSync';
 
 interface DocumentDropNodeProps {
@@ -20,6 +20,10 @@ export const DocumentDropNode: React.FC<DocumentDropNodeProps> = ({
   const [isIngesting, setIsIngesting] = useState(false);
   const [ingested, setIngested] = useState(node.status === 'completed');
 
+  useEffect(() => {
+    setIngested(node.status === 'completed');
+  }, [node.status]);
+
   const handleDropSimulation = () => {
     setIsIngesting(true);
     setTimeout(() => {
@@ -32,13 +36,13 @@ export const DocumentDropNode: React.FC<DocumentDropNodeProps> = ({
 
   return (
     <div
-      className="glass-panel"
+      className="adobe-card"
       style={{
         width: 350,
         padding: 16,
-        backgroundColor: '#ffffff',
-        border: isSelected ? '2px solid var(--neon-cyan)' : '1px solid var(--border-subtle)',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
+        backgroundColor: 'var(--color-surface)',
+        border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-neutral)',
+        borderTop: '3px solid var(--color-primary-70)',
       }}
     >
       {/* Node Header */}
@@ -47,16 +51,16 @@ export const DocumentDropNode: React.FC<DocumentDropNodeProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          marginBottom: 10,
-          paddingBottom: 8,
-          borderBottom: '1px solid var(--border-subtle)',
+          marginBottom: 12,
+          paddingBottom: 10,
+          borderBottom: '1px solid var(--color-neutral)',
           cursor: 'grab',
         }}
         className="drag-handle"
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <GripVertical size={14} color="var(--text-muted)" />
-          <FileText size={16} color="var(--neon-cyan)" />
+          <GripVertical size={14} color="var(--color-primary-40)" />
+          <FileText size={15} color="var(--color-primary)" />
           <input
             type="text"
             value={node.title}
@@ -64,18 +68,29 @@ export const DocumentDropNode: React.FC<DocumentDropNodeProps> = ({
             style={{
               background: 'transparent',
               border: 'none',
-              color: 'var(--text-primary)',
+              color: 'var(--color-on-surface)',
               fontWeight: 700,
-              fontSize: 13,
+              fontSize: 14,
               outline: 'none',
-              width: 180,
+              width: 190,
             }}
           />
         </div>
         <button
           onClick={onDelete}
           title="Delete Node"
-          style={{ background: 'none', border: 'none', color: 'var(--neon-red)', cursor: 'pointer' }}
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 'var(--radius-full)',
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--color-secondary)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
           <Trash2 size={14} />
         </button>
@@ -85,34 +100,34 @@ export const DocumentDropNode: React.FC<DocumentDropNodeProps> = ({
       <div
         onClick={handleDropSimulation}
         style={{
-          border: '2px dashed var(--neon-cyan)',
-          borderRadius: 6,
-          padding: '16px 12px',
+          border: `1.5px dashed ${ingested ? 'var(--color-primary)' : 'var(--color-primary-40)'}`,
+          borderRadius: 'var(--radius-md)',
+          padding: '18px 14px',
           textAlign: 'center',
-          backgroundColor: '#f8fafc',
+          backgroundColor: 'var(--color-surface-10)',
           cursor: 'pointer',
           marginBottom: 12,
-          transition: 'all 0.15s ease',
+          transition: 'border-color 0.15s ease',
         }}
       >
-        <FileUp size={24} color="var(--neon-cyan)" style={{ marginBottom: 6 }} />
-        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
+        <FileUp size={24} color="var(--color-primary)" style={{ marginBottom: 8 }} />
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-surface)' }}>
           {ingested ? 'Document Ingested to pgvector' : 'Drop Reference File or Click to Ingest'}
         </div>
-        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>
+        <div style={{ fontSize: 11, color: 'var(--color-primary-70)', marginTop: 4 }}>
           {ingested ? '12 chunks embedded • 1536-dim vectors' : 'PDF, Markdown, JSON, Code (Max 25MB)'}
         </div>
       </div>
 
       {/* Footer / Status */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <span className={ingested ? 'badge-neon-emerald' : 'badge-neon-cyan'} style={{ fontSize: 10 }}>
+        <span className={ingested ? 'adobe-chip-dark' : 'adobe-chip'} style={{ fontSize: 11, padding: '3px 10px' }}>
           {isIngesting ? 'Chunking & Embedding...' : ingested ? 'Grounded in Memory' : 'Ready'}
         </span>
 
         {ingested && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--neon-emerald)' }}>
-            <CheckCircle2 size={12} /> Synced
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, fontWeight: 700, color: 'var(--color-on-surface)' }}>
+            <CheckCircle2 size={13} color="var(--color-secondary)" /> Synced
           </span>
         )}
       </div>
@@ -125,9 +140,9 @@ export const DocumentDropNode: React.FC<DocumentDropNodeProps> = ({
           top: '50%',
           width: 14,
           height: 14,
-          borderRadius: '50%',
-          backgroundColor: 'var(--neon-emerald)',
-          border: '2px solid #ffffff',
+          borderRadius: 'var(--radius-full)',
+          backgroundColor: 'var(--color-primary-70)',
+          border: '2px solid var(--color-surface)',
         }}
       />
     </div>

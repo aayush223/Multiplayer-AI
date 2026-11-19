@@ -52,7 +52,7 @@ export async function projectRoutes(app: FastifyInstance): Promise<void> {
   // Update a project
   app.patch<{ Params: { projectId: string } }>('/api/projects/:projectId', async (request, reply) => {
     const { projectId } = request.params;
-    const body = request.body as { name?: string; settings?: Record<string, unknown> };
+    const body = (request.body as { name?: string; settings?: Record<string, unknown> } | undefined) ?? {};
 
     const setClauses: string[] = ['updated_at = NOW()'];
     const params: unknown[] = [];

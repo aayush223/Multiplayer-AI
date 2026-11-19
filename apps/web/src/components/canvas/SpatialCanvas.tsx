@@ -1,12 +1,8 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
-  Plus,
   RotateCcw,
-  Undo2,
-  Redo2,
   ZoomIn,
   ZoomOut,
-  Maximize2,
   Share2,
   Code2,
   Users,
@@ -35,6 +31,7 @@ interface SpatialCanvasProps {
   onBroadcastCursor: (x: number, y: number, isTyping?: boolean, selectedNodeId?: string | null) => void;
   onSwitchToIde: () => void;
   onBranchToIde: (node: CanvasNodeData) => void;
+  onRaiseTicket?: (node: CanvasNodeData) => void;
   onPinMemory: (content: string) => void;
   projectId: string;
   currentUser: { id: string; name: string; color: string };
@@ -53,6 +50,7 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
   onBroadcastCursor,
   onSwitchToIde,
   onBranchToIde,
+  onRaiseTicket,
   onPinMemory,
   projectId,
   currentUser,
@@ -65,8 +63,29 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
   const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
   const [nodeDragOffset, setNodeDragOffset] = useState({ x: 0, y: 0 });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [copiedRoomLink, setCopiedRoomLink] = useState(false);
 
   const canvasRef = useRef<HTMLDivElement>(null);
+
+  // Non-passive wheel listener to zoom smoothly without browser passive-listener console errors
+  useEffect(() => {
+    const el = canvasRef.current;
+    if (!el) return;
+    const onNativeWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomDelta = e.deltaY * -0.001;
+      setZoom((prev) => parseFloat(Math.min(Math.max(prev + zoomDelta, 0.4), 2.0).toFixed(2)));
+    };
+    el.addEventListener('wheel', onNativeWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onNativeWheel);
+  }, []);
+
+  const handleShareRoom = () => {
+    const shareUrl = `${window.location.origin}/?project=${encodeURIComponent(projectId)}&surface=canvas`;
+    void navigator.clipboard?.writeText(shareUrl);
+    setCopiedRoomLink(true);
+    setTimeout(() => setCopiedRoomLink(false), 2000);
+  };
 
   // Pan canvas on empty space drag
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -92,14 +111,13 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
       }
     }
 
-    if (e.button === 0 && !target.closest('.glass-card-neon-cyan, .glass-card-neon-purple, .glass-card-neon-indigo, .glass-card-neon-emerald, button, select, input, textarea')) {
+    if (e.button === 0 && !target.closest('.adobe-card, button, select, input, textarea')) {
       setIsPanning(true);
       setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
     }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    // Broadcast cursor coordinates
     const canvasX = (e.clientX - pan.x) / zoom;
     const canvasY = (e.clientY - pan.y) / zoom;
     onBroadcastCursor(canvasX, canvasY, false, selectedNodeId);
@@ -121,18 +139,10 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
     setDraggingNodeId(null);
   };
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const zoomDelta = e.deltaY * -0.001;
-    const newZoom = Math.min(Math.max(zoom + zoomDelta, 0.4), 2.0);
-    setZoom(parseFloat(newZoom.toFixed(2)));
-  };
-
   // Node Actions
   const handleRunPrompt = async (node: CanvasNodeData) => {
     onUpdateNodeData(node.id, { status: 'running' });
 
-    // Find or create connected output node
     let outputNode = nodes.find((n) => n.type === 'output' && n.sourceNodeId === node.id);
     if (!outputNode) {
       const newOutputId = `node-output-${Date.now()}`;
@@ -229,101 +239,110 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
       onMouseDown={handleMouseDown}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
-      onWheel={handleWheel}
+      onMouseLeave={handleMouseUp}
+      className="adobe-canvas-grid"
       style={{
         position: 'relative',
         width: '100%',
         height: '100%',
-        backgroundColor: '#ffffff',
         overflow: 'hidden',
         userSelect: 'none',
         cursor: isPanning ? 'grabbing' : 'default',
       }}
     >
-      {/* Top Navigation Header */}
+      {/* Top Floating Canvas Utility Strip */}
       <header
         style={{
           position: 'absolute',
-          top: 14,
-          left: 14,
-          right: 14,
-          height: 48,
-          backgroundColor: '#ffffff',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 8,
+          top: 16,
+          left: 16,
+          right: 16,
+          height: 52,
+          backgroundColor: 'var(--color-surface)',
+          border: '1px solid var(--color-neutral)',
+          borderRadius: 'var(--radius-lg)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          padding: '0 16px',
+          padding: '0 18px',
           zIndex: 60,
-          boxShadow: '0 1px 4px rgba(0, 0, 0, 0.05)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.06)',
         }}
       >
-        {/* Left: Branding & Project */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 13, fontWeight: 800, letterSpacing: '0.1em', color: 'var(--neon-cyan)' }}>
-              MINGE
-            </span>
-            <span style={{ color: 'var(--border-subtle)' }}>//</span>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-secondary)' }}>
-              AI CANVAS
-            </span>
-          </div>
-
-          <span className="badge-neon-purple" style={{ fontSize: 10 }}>
+        {/* Left: Title & Project */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 15,
+              fontWeight: 900,
+              letterSpacing: '-0.02em',
+              color: 'var(--color-on-surface)',
+            }}
+          >
+            AI Canvas
+          </span>
+          <span className="adobe-chip" style={{ fontSize: 11 }}>
             Project: {projectId}
           </span>
         </div>
 
         {/* Center: Multiplayer Collaborators */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-muted)' }}>
-            <Users size={13} color="var(--neon-cyan)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: 'var(--color-primary-70)' }}>
+            <Users size={14} color="var(--color-secondary)" />
             <span>Multiplayer Presence:</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {[
-              { id: 'user_alice', name: 'Alice', color: '#0284c7' },
-              { id: 'user_bob', name: 'Bob', color: '#db2777' },
-              { id: 'user_carol', name: 'Carol', color: '#7c3aed' },
-            ].map((u) => (
-              <button
-                key={u.id}
-                onClick={() => onSwitchUser(u)}
-                title={`Switch Identity to ${u.name}`}
-                style={{
-                  padding: '3px 8px',
-                  borderRadius: 12,
-                  fontSize: 10,
-                  fontWeight: 700,
-                  backgroundColor: currentUser.id === u.id ? u.color : '#f1f5f9',
-                  color: currentUser.id === u.id ? '#ffffff' : 'var(--text-secondary)',
-                  border: `1px solid ${currentUser.id === u.id ? u.color : 'var(--border-subtle)'}`,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                {u.name}
-              </button>
-            ))}
+              { id: 'user_alice', name: 'Alice', color: '#EB1000' },
+              { id: 'user_bob', name: 'Bob', color: '#000000' },
+              { id: 'user_carol', name: 'Carol', color: '#4D4D4D' },
+            ].map((u) => {
+              const isSelected = currentUser.id === u.id;
+              return (
+                <button
+                  key={u.id}
+                  onClick={() => onSwitchUser(u)}
+                  title={`Switch Identity to ${u.name}`}
+                  style={{
+                    height: 28,
+                    padding: '0 12px',
+                    borderRadius: 'var(--radius-full)',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    backgroundColor: isSelected ? u.color : 'var(--color-surface-10)',
+                    color: isSelected ? 'var(--color-tertiary)' : 'var(--color-on-surface)',
+                    border: `1px solid ${isSelected ? u.color : 'var(--color-neutral)'}`,
+                    cursor: 'pointer',
+                    transition: 'background-color 0.15s ease',
+                  }}
+                >
+                  {u.name}
+                </button>
+              );
+            })}
           </div>
         </div>
 
         {/* Right: Actions & Switch to Prompt IDE */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button className="btn-cyber-glass" style={{ padding: '6px 12px', fontSize: 11 }}>
-            <Share2 size={12} />
-            <span>Share Room</span>
+          <button
+            onClick={handleShareRoom}
+            className={copiedRoomLink ? 'adobe-btn-red' : 'adobe-btn-outline'}
+            style={{ height: 34, padding: '0 16px', fontSize: 13 }}
+          >
+            <Share2 size={13} />
+            <span>{copiedRoomLink ? 'Link Copied' : 'Share Room'}</span>
           </button>
 
           <button
             onClick={onSwitchToIde}
-            className="btn-cyber-primary"
-            style={{ padding: '6px 14px', fontSize: 11, fontWeight: 700 }}
+            className="adobe-btn-dark"
+            style={{ height: 34, padding: '0 16px', fontSize: 13 }}
           >
-            <Code2 size={13} />
-            <span>Open in Prompt IDE ⇱</span>
+            <Code2 size={14} />
+            <span>Open in Prompt IDE</span>
           </button>
         </div>
       </header>
@@ -366,6 +385,7 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
                   onUpdate={(p) => onUpdateNodeData(node.id, p)}
                   onDelete={() => onDeleteNode(node.id)}
                   onRun={handleRunPrompt}
+                  onRaiseTicket={onRaiseTicket}
                   isSelected={isSelected}
                 />
               )}
@@ -404,61 +424,62 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
       {/* Multiplayer Live Cursors */}
       <MultiplayerPresence peers={peers} zoom={zoom} pan={pan} />
 
-      {/* Canvas Bottom Toolbar */}
+      {/* Stark Black Floating Pill Canvas Toolbar */}
       <footer
         style={{
           position: 'absolute',
-          bottom: 16,
+          bottom: 20,
           left: '50%',
           transform: 'translateX(-50%)',
-          height: 44,
-          backgroundColor: '#ffffff',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 8,
+          height: 52,
+          backgroundColor: 'var(--color-primary)',
+          borderRadius: 'var(--radius-full)',
           display: 'flex',
           alignItems: 'center',
-          gap: 12,
-          padding: '0 16px',
+          gap: 10,
+          padding: '0 12px',
           zIndex: 60,
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.16)',
         }}
       >
         {/* Add Nodes */}
-        <button onClick={handleAddPromptNode} className="btn-cyber-glass" style={{ padding: '6px 10px', fontSize: 11 }}>
-          <Sparkles size={12} color="var(--neon-indigo)" />
+        <button onClick={handleAddPromptNode} className="adobe-btn-primary" style={{ height: 34, padding: '0 14px', fontSize: 12.5 }}>
+          <Sparkles size={13} color="var(--color-secondary)" />
           <span>+ Prompt Node</span>
         </button>
-        <button onClick={handleAddDocumentNode} className="btn-cyber-glass" style={{ padding: '6px 10px', fontSize: 11 }}>
-          <FileText size={12} color="var(--neon-cyan)" />
+        <button onClick={handleAddDocumentNode} className="adobe-btn-secondary" style={{ height: 34, padding: '0 14px', fontSize: 12.5 }}>
+          <FileText size={13} />
           <span>+ Document Drop</span>
         </button>
-        <button onClick={handleAddMemoryCapsule} className="btn-cyber-glass" style={{ padding: '6px 10px', fontSize: 11 }}>
-          <Database size={12} color="var(--neon-emerald)" />
+        <button onClick={handleAddMemoryCapsule} className="adobe-btn-secondary" style={{ height: 34, padding: '0 14px', fontSize: 12.5 }}>
+          <Database size={13} />
           <span>+ Memory Capsule</span>
         </button>
 
-        <div style={{ width: 1, height: 20, backgroundColor: 'var(--border-subtle)' }} />
+        <div style={{ width: 1, height: 22, backgroundColor: 'var(--color-primary-70)' }} />
 
         {/* Zoom Controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-tertiary)', padding: '0 4px' }}>
           <button
             onClick={() => setZoom((z) => Math.max(z - 0.1, 0.4))}
-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            title="Zoom Out"
+            style={{ background: 'none', border: 'none', color: 'var(--color-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
           >
             <ZoomOut size={15} />
           </button>
-          <span style={{ fontSize: 11, fontFamily: 'var(--font-mono)', minWidth: 40, textAlign: 'center' }}>
+          <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'var(--font-mono)', minWidth: 42, textAlign: 'center', color: 'var(--color-tertiary)' }}>
             {Math.round(zoom * 100)}%
           </span>
           <button
             onClick={() => setZoom((z) => Math.min(z + 0.1, 2.0))}
-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            title="Zoom In"
+            style={{ background: 'none', border: 'none', color: 'var(--color-tertiary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
           >
             <ZoomIn size={15} />
           </button>
         </div>
 
-        <div style={{ width: 1, height: 20, backgroundColor: 'var(--border-subtle)' }} />
+        <div style={{ width: 1, height: 22, backgroundColor: 'var(--color-primary-70)' }} />
 
         {/* Reset View */}
         <button
@@ -467,9 +488,17 @@ export const SpatialCanvas: React.FC<SpatialCanvasProps> = ({
             setPan({ x: 0, y: 0 });
           }}
           title="Reset Viewport"
-          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: 'var(--color-tertiary)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            padding: '0 6px',
+          }}
         >
-          <RotateCcw size={14} />
+          <RotateCcw size={15} />
         </button>
       </footer>
     </div>

@@ -10,9 +10,15 @@
 import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import fastifyJwt from '@fastify/jwt';
 
+export type OrgRole = 'admin' | 'manager' | 'employee';
+
 export interface JwtPayload {
   sub: string; // User ID
   projectIds: string[];
+  role?: OrgRole;
+  name?: string;
+  email?: string;
+  managerId?: string | null;
   iat?: number;
   exp?: number;
 }
@@ -21,6 +27,12 @@ declare module '@fastify/jwt' {
   interface FastifyJWT {
     payload: JwtPayload;
     user: JwtPayload;
+  }
+}
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<unknown>;
   }
 }
 
@@ -42,8 +54,8 @@ export async function registerAuth(app: FastifyInstance): Promise<void> {
   app.decorate('authenticate', async function (request: FastifyRequest, reply: FastifyReply) {
     try {
       await request.jwtVerify();
-    } catch (err) {
-      reply.status(401).send({ error: 'Unauthorized', message: 'Invalid or missing JWT token.' });
+    } catch {
+      return reply.status(401).send({ error: 'Unauthorized', message: 'Invalid or missing JWT token.' });
     }
   });
 
@@ -77,13 +89,15 @@ export function getUserId(request: FastifyRequest): string {
  * Validate that the authenticated user has access to the given project.
  */
 export function assertProjectAccess(request: FastifyRequest, projectId: string): void {
+  let jwt: JwtPayload | undefined;
   try {
-    const jwt = request.user as JwtPayload;
-    if (jwt?.projectIds && !jwt.projectIds.includes(projectId)) {
-      throw new Error(`Access denied to project ${projectId}`);
-    }
+    jwt = request.user as JwtPayload | undefined;
   } catch {
     // If no JWT is present (e.g., dev mode with X-User-Id), allow through.
-    // In production, this would be strict.
+    return;
+  }
+
+  if (jwt?.projectIds && jwt.projectIds.length > 0 && !jwt.projectIds.includes(projectId)) {
+    throw new Error(`Access denied to project ${projectId}`);
   }
 }

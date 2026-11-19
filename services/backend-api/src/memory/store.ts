@@ -9,7 +9,7 @@
  *
  * Invariant 6: SOFT-DELETE — deleted_at is set instead of hard deleting. 30-day recovery.
  */
-import { withProjectScope, query } from '../db/client.js';
+import { withProjectScope } from '../db/client.js';
 import { EMBEDDING_DIMENSION, DEFAULT_TOP_K } from '@minge/shared';
 import type { Memory, MemoryCreateInput, MemorySearchInput, MemorySupersedInput } from '@minge/shared';
 
@@ -77,6 +77,10 @@ export async function searchMemories(
     return [];
   }
 
+  if (input.query_embedding.length !== EMBEDDING_DIMENSION) {
+    throw new Error(`Query embedding must be ${EMBEDDING_DIMENSION} dimensions, got ${input.query_embedding.length}`);
+  }
+
   const topK = input.top_k ?? DEFAULT_TOP_K;
   const embeddingStr = `[${input.query_embedding.join(',')}]`;
 
@@ -120,58 +124,53 @@ export async function supersedeMemory(
     return null;
   }
 
+  if (newEmbedding.length !== EMBEDDING_DIMENSION) {
+    throw new Error(`Embedding must be ${EMBEDDING_DIMENSION} dimensions, got ${newEmbedding.length}`);
+  }
+
   const result = await withProjectScope(input.project_id, async (client) => {
-    // Start a transaction for atomicity
-    await client.query('BEGIN');
+    // 1. Fetch the active original record to get its version and type
+    const original = await client.query(
+      `SELECT * FROM minge.memories
+       WHERE id = $1 AND project_id = $2 AND superseded_by_id IS NULL AND deleted_at IS NULL`,
+      [input.original_id, input.project_id]
+    );
 
-    try {
-      // 1. Fetch the original to get its version and type
-      const original = await client.query(
-        `SELECT * FROM minge.memories WHERE id = $1 AND project_id = $2 AND deleted_at IS NULL`,
-        [input.original_id, input.project_id]
-      );
-
-      if (original.rows.length === 0) {
-        await client.query('ROLLBACK');
-        return null;
-      }
-
-      const orig = original.rows[0] as Memory;
-      const newVersion = (orig as unknown as { version: number }).version + 1;
-      const embeddingStr = `[${newEmbedding.join(',')}]`;
-
-      // 2. Insert the new version
-      const newRecord = await client.query(
-        `INSERT INTO minge.memories
-          (project_id, type, content, embedding, metadata, source_uri, version, ingested_by_user_id)
-         VALUES ($1, $2, $3, $4::vector, $5, $6, $7, $8)
-         RETURNING *`,
-        [
-          input.project_id,
-          orig.type,
-          input.content,
-          embeddingStr,
-          JSON.stringify(input.metadata ?? (orig as unknown as { metadata: object }).metadata),
-          (orig as unknown as { source_uri: string | null }).source_uri,
-          newVersion,
-          input.ingested_by_user_id,
-        ]
-      );
-
-      const newMem = newRecord.rows[0] as Memory;
-
-      // 3. Mark the old record as superseded (NOT a content update)
-      await client.query(
-        `UPDATE minge.memories SET superseded_by_id = $1 WHERE id = $2 AND project_id = $3`,
-        [newMem.id, input.original_id, input.project_id]
-      );
-
-      await client.query('COMMIT');
-      return newMem;
-    } catch (err) {
-      await client.query('ROLLBACK');
-      throw err;
+    if (original.rows.length === 0) {
+      return null;
     }
+
+    const orig = original.rows[0] as Memory;
+    const newVersion = (orig.version ?? 1) + 1;
+    const embeddingStr = `[${newEmbedding.join(',')}]`;
+
+    // 2. Insert the new version
+    const newRecord = await client.query(
+      `INSERT INTO minge.memories
+        (project_id, type, content, embedding, metadata, source_uri, version, ingested_by_user_id)
+       VALUES ($1, $2, $3, $4::vector, $5, $6, $7, $8)
+       RETURNING *`,
+      [
+        input.project_id,
+        orig.type,
+        input.content,
+        embeddingStr,
+        JSON.stringify(input.metadata ?? orig.metadata ?? {}),
+        orig.source_uri ?? null,
+        newVersion,
+        input.ingested_by_user_id,
+      ]
+    );
+
+    const newMem = newRecord.rows[0] as Memory;
+
+    // 3. Mark the old record as superseded (NOT a content update)
+    await client.query(
+      `UPDATE minge.memories SET superseded_by_id = $1 WHERE id = $2 AND project_id = $3`,
+      [newMem.id, input.original_id, input.project_id]
+    );
+
+    return newMem;
   });
 
   return result;
@@ -203,12 +202,43 @@ export async function softDeleteMemory(
 }
 
 /**
- * List all active memories for a project (non-superseded, non-deleted).
+ * Restore a soft-deleted memory within the 30-day recovery window.
+ * Invariant 6: Terms v0.1 Section 16.3 compliance.
+ */
+export async function restoreMemory(
+  projectId: string,
+  memoryId: string
+): Promise<Memory | null> {
+  if (!isValidProjectId(projectId)) {
+    console.warn('[memory-store] FAIL_CLOSED: restoreMemory called without project_id.');
+    return null;
+  }
+
+  const result = await withProjectScope(projectId, async (client) => {
+    const res = await client.query(
+      `UPDATE minge.memories
+       SET deleted_at = NULL
+       WHERE id = $1
+         AND project_id = $2
+         AND deleted_at IS NOT NULL
+         AND deleted_at >= NOW() - INTERVAL '30 days'
+       RETURNING *`,
+      [memoryId, projectId]
+    );
+    return (res.rows[0] as Memory) ?? null;
+  });
+
+  return result;
+}
+
+/**
+ * List memories for a project (non-superseded; optionally including soft-deleted within recovery).
  */
 export async function listMemories(
   projectId: string,
   limit = 50,
-  offset = 0
+  offset = 0,
+  includeDeleted = false
 ): Promise<Memory[]> {
   if (!isValidProjectId(projectId)) {
     console.warn('[memory-store] FAIL_CLOSED: listMemories called without project_id.');
@@ -216,11 +246,12 @@ export async function listMemories(
   }
 
   const results = await withProjectScope(projectId, async (client) => {
+    const deletedClause = includeDeleted ? '' : 'AND deleted_at IS NULL';
     const res = await client.query(
       `SELECT * FROM minge.memories
        WHERE project_id = $1
          AND superseded_by_id IS NULL
-         AND deleted_at IS NULL
+         ${deletedClause}
        ORDER BY created_at DESC
        LIMIT $2 OFFSET $3`,
       [projectId, limit, offset]

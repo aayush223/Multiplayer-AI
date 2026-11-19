@@ -20,6 +20,7 @@ export interface Memory {
   embedding: number[] | null;
   metadata: Record<string, unknown>;
   source_uri: string | null;
+  version: number;
   superseded_by_id: string | null;
   ingested_by_user_id: string;
   created_at: Date;

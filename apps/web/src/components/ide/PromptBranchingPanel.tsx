@@ -1,19 +1,16 @@
 import React, { useState } from 'react';
 import {
-  Sparkles,
   GitPullRequest,
   Play,
   RotateCcw,
   Sliders,
   CheckCircle,
   Database,
-  ExternalLink,
   Bot,
   Zap,
   Clock,
   Coins,
   Send,
-  ShieldAlert,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { PromptPackage, MemoryItem, PromptPullRequest, defaultApiClient } from '../../services/apiClient';
@@ -119,7 +116,7 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#00F2FE', '#A855F7', '#10B981'],
+        colors: ['#EB1000', '#000000', '#1A1A1A', '#999999'],
       });
       onCreatePr({
         title: prTitle,
@@ -138,10 +135,10 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
   return (
     <aside
       style={{
-        width: 360,
+        width: 376,
         height: '100%',
-        backgroundColor: '#f8fafc',
-        borderLeft: '1px solid var(--border-subtle)',
+        backgroundColor: 'var(--color-surface-10)',
+        borderLeft: '1px solid var(--color-neutral)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -150,18 +147,18 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
       {/* Header Segmented Control */}
       <header
         style={{
-          padding: '8px 12px',
-          borderBottom: '1px solid var(--border-subtle)',
-          backgroundColor: '#ffffff',
+          padding: '10px 14px',
+          borderBottom: '1px solid var(--color-neutral)',
+          backgroundColor: 'var(--color-surface)',
         }}
       >
         <div
           style={{
             display: 'flex',
-            backgroundColor: '#f1f5f9',
-            borderRadius: 6,
+            backgroundColor: 'var(--color-surface-10)',
+            borderRadius: 'var(--radius-full)',
             padding: 3,
-            border: '1px solid var(--border-subtle)',
+            border: '1px solid var(--color-neutral)',
           }}
         >
           <button
@@ -169,18 +166,17 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
             style={{
               flex: 1,
               padding: '6px 0',
-              fontSize: 11,
-              fontWeight: 600,
-              borderRadius: 5,
+              fontSize: 12,
+              fontWeight: 700,
+              borderRadius: 'var(--radius-full)',
               border: 'none',
-              background: activeTab === 'ppr' ? '#ffffff' : 'transparent',
-              color: activeTab === 'ppr' ? 'var(--neon-cyan)' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'ppr' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+              background: activeTab === 'ppr' ? 'var(--color-primary)' : 'transparent',
+              color: activeTab === 'ppr' ? 'var(--color-tertiary)' : 'var(--color-primary-70)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
+              gap: 5,
             }}
           >
             <GitPullRequest size={12} />
@@ -191,18 +187,17 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
             style={{
               flex: 1,
               padding: '6px 0',
-              fontSize: 11,
-              fontWeight: 600,
-              borderRadius: 5,
+              fontSize: 12,
+              fontWeight: 700,
+              borderRadius: 'var(--radius-full)',
               border: 'none',
-              background: activeTab === 'chat' ? '#ffffff' : 'transparent',
-              color: activeTab === 'chat' ? 'var(--neon-purple)' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'chat' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+              background: activeTab === 'chat' ? 'var(--color-primary)' : 'transparent',
+              color: activeTab === 'chat' ? 'var(--color-tertiary)' : 'var(--color-primary-70)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
+              gap: 5,
             }}
           >
             <Bot size={12} />
@@ -213,18 +208,17 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
             style={{
               flex: 1,
               padding: '6px 0',
-              fontSize: 11,
-              fontWeight: 600,
-              borderRadius: 5,
+              fontSize: 12,
+              fontWeight: 700,
+              borderRadius: 'var(--radius-full)',
               border: 'none',
-              background: activeTab === 'benchmark' ? '#ffffff' : 'transparent',
-              color: activeTab === 'benchmark' ? 'var(--neon-emerald)' : 'var(--text-secondary)',
-              boxShadow: activeTab === 'benchmark' ? '0 1px 2px rgba(0,0,0,0.05)' : 'none',
+              background: activeTab === 'benchmark' ? 'var(--color-primary)' : 'transparent',
+              color: activeTab === 'benchmark' ? 'var(--color-tertiary)' : 'var(--color-primary-70)',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 4,
+              gap: 5,
             }}
           >
             <Zap size={12} />
@@ -234,16 +228,16 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
       </header>
 
       {/* Main Panel Content */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: 14 }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
         {activeTab === 'ppr' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Grounded Memory References */}
-            <div className="glass-panel" style={{ padding: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div className="adobe-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                   Grounded Project Memories
                 </span>
-                <span className="badge-neon-cyan" style={{ fontSize: 10 }}>
+                <span className="adobe-chip-dark" style={{ fontSize: 11, padding: '2px 8px' }}>
                   {currentPackage.grounded_memory_ids.length} Linked
                 </span>
               </div>
@@ -255,10 +249,10 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
                       key={mem.id}
                       onClick={() => onSelectMemory(mem)}
                       style={{
-                        padding: '6px 10px',
-                        borderRadius: 6,
-                        backgroundColor: isGrounded ? '#f0f9ff' : '#ffffff',
-                        border: `1px solid ${isGrounded ? '#bae6fd' : 'var(--border-subtle)'}`,
+                        padding: '8px 10px',
+                        borderRadius: 'var(--radius-md)',
+                        backgroundColor: isGrounded ? 'var(--color-surface-10)' : 'var(--color-surface)',
+                        border: isGrounded ? '1.5px solid var(--color-primary)' : '1px solid var(--color-neutral)',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
@@ -266,12 +260,12 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
-                        <Database size={12} color={isGrounded ? 'var(--neon-cyan)' : 'var(--text-muted)'} />
-                        <span style={{ fontSize: 11, color: isGrounded ? 'var(--text-primary)' : 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <Database size={12} color={isGrounded ? 'var(--color-secondary)' : 'var(--color-primary-40)'} />
+                        <span style={{ fontSize: 12, color: isGrounded ? 'var(--color-on-surface)' : 'var(--color-primary-70)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {mem.content}
                         </span>
                       </div>
-                      <span style={{ fontSize: 10, color: 'var(--neon-cyan)', fontWeight: 600 }}>v{mem.version}</span>
+                      <span style={{ fontSize: 11, color: 'var(--color-secondary)', fontWeight: 700 }}>v{mem.version}</span>
                     </div>
                   );
                 })}
@@ -279,17 +273,17 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
             </div>
 
             {/* Live Evaluation Suite */}
-            <div className="glass-panel" style={{ padding: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--neon-purple)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            <div className="adobe-card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                   Live Benchmark Evaluation
                 </span>
-                <Sliders size={13} color="var(--neon-purple)" />
+                <Sliders size={14} color="var(--color-secondary)" />
               </div>
 
               {/* Model Dropdown */}
-              <div style={{ marginBottom: 10 }}>
-                <label style={{ fontSize: 10, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 4 }}>
+              <div style={{ marginBottom: 12 }}>
+                <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary-70)', display: 'block', marginBottom: 6 }}>
                   Upstream LLM Provider & Model
                 </label>
                 <select
@@ -297,12 +291,14 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
                   onChange={(e) => setSelectedModel(e.target.value)}
                   style={{
                     width: '100%',
-                    padding: '6px 10px',
-                    borderRadius: 6,
-                    backgroundColor: 'var(--bg-surface)',
-                    border: '1px solid var(--border-glass)',
-                    color: 'var(--text-primary)',
-                    fontSize: 12,
+                    height: 36,
+                    padding: '0 14px',
+                    borderRadius: 'var(--radius-full)',
+                    backgroundColor: 'var(--color-surface-10)',
+                    border: '1px solid var(--color-neutral)',
+                    color: 'var(--color-on-surface)',
+                    fontSize: 12.5,
+                    fontWeight: 600,
                     outline: 'none',
                   }}
                 >
@@ -314,9 +310,9 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
               </div>
 
               {/* Sliders */}
-              <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
+              <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, color: 'var(--color-primary-70)', marginBottom: 4 }}>
                     <span>Temperature</span>
                     <span>{temperature}</span>
                   </div>
@@ -327,11 +323,11 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
                     step="0.05"
                     value={temperature}
                     onChange={(e) => setTemperature(parseFloat(e.target.value))}
-                    style={{ width: '100%', accentColor: 'var(--neon-cyan)' }}
+                    style={{ width: '100%', accentColor: 'var(--color-secondary)' }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)', marginBottom: 2 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 700, color: 'var(--color-primary-70)', marginBottom: 4 }}>
                     <span>Max Tokens</span>
                     <span>{maxTokens}</span>
                   </div>
@@ -342,7 +338,7 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
                     step="256"
                     value={maxTokens}
                     onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                    style={{ width: '100%', accentColor: 'var(--neon-purple)' }}
+                    style={{ width: '100%', accentColor: 'var(--color-primary)' }}
                   />
                 </div>
               </div>
@@ -351,8 +347,8 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
               <button
                 onClick={handleRunEvaluation}
                 disabled={isRunningEval}
-                className="btn-cyber-primary"
-                style={{ width: '100%', padding: '9px 0', fontSize: 12 }}
+                className="adobe-btn-dark"
+                style={{ width: '100%', height: 38, fontSize: 13 }}
               >
                 {isRunningEval ? <RotateCcw size={14} className="cable-flowing" /> : <Play size={14} />}
                 <span>{isRunningEval ? 'Executing Evaluation...' : 'Test Run with Mock Context'}</span>
@@ -363,16 +359,16 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
                 <div
                   style={{
                     marginTop: 12,
-                    padding: 10,
-                    borderRadius: 6,
-                    backgroundColor: '#ffffff',
-                    border: '1px solid var(--border-subtle)',
+                    padding: 12,
+                    borderRadius: 'var(--radius-md)',
+                    backgroundColor: 'var(--color-surface-10)',
+                    border: '1px solid var(--color-neutral)',
                     maxHeight: 180,
                     overflowY: 'auto',
                     fontFamily: 'var(--font-mono)',
-                    fontSize: 11,
+                    fontSize: 12,
                     lineHeight: 1.5,
-                    color: 'var(--text-code)',
+                    color: 'var(--color-on-surface)',
                     whiteSpace: 'pre-wrap',
                   }}
                 >
@@ -384,23 +380,23 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
               {evalMetrics && (
                 <div
                   style={{
-                    marginTop: 8,
+                    marginTop: 10,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    fontSize: 10,
-                    color: 'var(--neon-emerald)',
-                    fontWeight: 600,
+                    fontSize: 11,
+                    color: 'var(--color-on-surface)',
+                    fontWeight: 700,
                   }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Zap size={11} /> {evalMetrics.tokens} Tokens
+                    <Zap size={12} color="var(--color-secondary)" /> {evalMetrics.tokens} Tokens
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Clock size={11} /> {evalMetrics.latencyMs}ms
+                    <Clock size={12} /> {evalMetrics.latencyMs}ms
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <Coins size={11} /> $0.0001
+                    <Coins size={12} /> $0.0001
                   </span>
                 </div>
               )}
@@ -409,17 +405,15 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
             {/* Create Prompt Pull Request (PPR) Action Button */}
             <button
               onClick={() => setShowPrModal(true)}
-              className="btn-cyber-purple"
+              className="adobe-btn-red"
               style={{
                 width: '100%',
-                padding: '12px 0',
-                fontSize: 13,
-                fontWeight: 700,
-                letterSpacing: '0.04em',
+                height: 42,
+                fontSize: 14,
               }}
             >
               <GitPullRequest size={15} />
-              <span>Create Prompt Pull Request (PPR) ➔</span>
+              <span>Create Prompt Pull Request (PPR)</span>
             </button>
           </div>
         )}
@@ -432,13 +426,13 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
                 <div
                   key={idx}
                   style={{
-                    padding: '8px 12px',
-                    borderRadius: 6,
-                    fontSize: 12,
+                    padding: msg.role === 'user' ? '10px 14px' : '12px 14px',
+                    borderRadius: msg.role === 'user' ? 'var(--radius-lg)' : 'var(--radius-md)',
+                    fontSize: 13,
                     lineHeight: 1.5,
-                    backgroundColor: msg.role === 'user' ? '#f0f9ff' : '#ffffff',
-                    border: `1px solid ${msg.role === 'user' ? '#bae6fd' : 'var(--border-subtle)'}`,
-                    color: 'var(--text-primary)',
+                    backgroundColor: msg.role === 'user' ? 'var(--color-primary-90)' : 'var(--color-surface)',
+                    border: msg.role === 'user' ? 'none' : '1px solid var(--color-neutral)',
+                    color: msg.role === 'user' ? 'var(--color-tertiary)' : 'var(--color-on-surface)',
                     alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
                     maxWidth: '90%',
                   }}
@@ -448,26 +442,18 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: 6, paddingTop: 10, borderTop: '1px solid var(--border-subtle)' }}>
+            <div style={{ display: 'flex', gap: 8, paddingTop: 10, borderTop: '1px solid var(--color-neutral)' }}>
               <input
                 type="text"
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSendChat()}
                 placeholder="Ask agent about memories or prompts..."
-                style={{
-                  flex: 1,
-                  backgroundColor: '#ffffff',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 6,
-                  padding: '7px 10px',
-                  color: 'var(--text-primary)',
-                  fontSize: 12,
-                  outline: 'none',
-                }}
+                className="adobe-input"
+                style={{ flex: 1, fontSize: 13 }}
               />
-              <button onClick={handleSendChat} className="btn-cyber-primary" style={{ padding: '0 12px' }}>
-                <Send size={13} />
+              <button onClick={handleSendChat} className="adobe-btn-dark" style={{ width: 40, padding: 0 }}>
+                <Send size={14} />
               </button>
             </div>
           </div>
@@ -475,34 +461,34 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
 
         {/* Benchmark Matrix Tab */}
         {activeTab === 'benchmark' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <div className="glass-panel" style={{ padding: 12 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--neon-emerald)', textTransform: 'uppercase' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="adobe-card">
+              <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                 Automated Eval Matrix
               </span>
-              <table style={{ width: '100%', marginTop: 10, fontSize: 11, borderCollapse: 'collapse' }}>
+              <table style={{ width: '100%', marginTop: 12, fontSize: 12, borderCollapse: 'collapse' }}>
                 <thead>
-                  <tr style={{ color: 'var(--text-muted)', borderBottom: '1px solid var(--border-subtle)' }}>
-                    <th style={{ textAlign: 'left', paddingBottom: 6 }}>Branch</th>
-                    <th style={{ textAlign: 'right', paddingBottom: 6 }}>Win Rate</th>
-                    <th style={{ textAlign: 'right', paddingBottom: 6 }}>Latency</th>
+                  <tr style={{ color: 'var(--color-primary-70)', borderBottom: '1px solid var(--color-neutral)' }}>
+                    <th style={{ textAlign: 'left', paddingBottom: 8 }}>Branch</th>
+                    <th style={{ textAlign: 'right', paddingBottom: 8 }}>Win Rate</th>
+                    <th style={{ textAlign: 'right', paddingBottom: 8 }}>Latency</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <td style={{ padding: '8px 0', color: 'var(--text-primary)' }}>main</td>
-                    <td style={{ textAlign: 'right', color: 'var(--text-secondary)' }}>92.4%</td>
-                    <td style={{ textAlign: 'right', color: 'var(--text-secondary)' }}>940ms</td>
+                  <tr style={{ borderBottom: '1px solid var(--color-neutral)' }}>
+                    <td style={{ padding: '10px 0', color: 'var(--color-on-surface)' }}>main</td>
+                    <td style={{ textAlign: 'right', color: 'var(--color-primary-70)' }}>92.4%</td>
+                    <td style={{ textAlign: 'right', color: 'var(--color-primary-70)' }}>940ms</td>
                   </tr>
-                  <tr style={{ borderBottom: '1px solid var(--border-subtle)' }}>
-                    <td style={{ padding: '8px 0', color: 'var(--neon-cyan)', fontWeight: 600 }}>exp/chain-of-thought</td>
-                    <td style={{ textAlign: 'right', color: 'var(--neon-emerald)', fontWeight: 700 }}>96.6% (+4.2%)</td>
-                    <td style={{ textAlign: 'right', color: 'var(--neon-emerald)' }}>820ms</td>
+                  <tr style={{ borderBottom: '1px solid var(--color-neutral)' }}>
+                    <td style={{ padding: '10px 0', color: 'var(--color-on-surface)', fontWeight: 700 }}>exp/chain-of-thought</td>
+                    <td style={{ textAlign: 'right', color: 'var(--color-secondary)', fontWeight: 700 }}>96.6% (+4.2%)</td>
+                    <td style={{ textAlign: 'right', color: 'var(--color-on-surface)', fontWeight: 700 }}>820ms</td>
                   </tr>
                   <tr>
-                    <td style={{ padding: '8px 0', color: 'var(--text-secondary)' }}>feature/json-mode</td>
-                    <td style={{ textAlign: 'right', color: 'var(--text-secondary)' }}>94.2% (+1.8%)</td>
-                    <td style={{ textAlign: 'right', color: 'var(--text-muted)' }}>1120ms</td>
+                    <td style={{ padding: '10px 0', color: 'var(--color-primary-70)' }}>feature/json-mode</td>
+                    <td style={{ textAlign: 'right', color: 'var(--color-primary-70)' }}>94.2% (+1.8%)</td>
+                    <td style={{ textAlign: 'right', color: 'var(--color-primary-40)' }}>1120ms</td>
                   </tr>
                 </tbody>
               </table>
@@ -517,8 +503,7 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
           style={{
             position: 'fixed',
             inset: 0,
-            backgroundColor: 'rgba(15, 23, 42, 0.4)',
-            backdropFilter: 'blur(4px)',
+            backgroundColor: 'var(--color-hero-overlay)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -527,97 +512,105 @@ export const PromptBranchingPanel: React.FC<PromptBranchingPanelProps> = ({
         >
           <div
             style={{
-              width: 440,
-              padding: 24,
+              width: 460,
+              padding: 28,
               display: 'flex',
               flexDirection: 'column',
-              gap: 16,
-              backgroundColor: '#ffffff',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 8,
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+              gap: 18,
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid var(--color-neutral)',
+              borderRadius: 'var(--radius-lg)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <GitPullRequest size={18} color="var(--neon-purple)" />
-                <span style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <GitPullRequest size={18} color="var(--color-secondary)" />
+                <span
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 22,
+                    fontWeight: 900,
+                    letterSpacing: '-0.02em',
+                    color: 'var(--color-on-surface)',
+                  }}
+                >
                   Prompt Pull Request (PPR)
                 </span>
               </div>
               <button
                 onClick={() => setShowPrModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', fontSize: 18, cursor: 'pointer' }}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 'var(--radius-full)',
+                  background: 'var(--color-surface-10)',
+                  border: '1px solid var(--color-neutral)',
+                  color: 'var(--color-primary)',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
               >
                 ✕
               </button>
             </div>
 
             <div>
-              <label style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary-70)', display: 'block', marginBottom: 6 }}>
                 PR Title
               </label>
               <input
                 type="text"
                 value={prTitle}
                 onChange={(e) => setPrTitle(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '8px 12px',
-                  borderRadius: 6,
-                  backgroundColor: '#ffffff',
-                  border: '1px solid var(--border-subtle)',
-                  color: 'var(--text-primary)',
-                  fontSize: 13,
-                  outline: 'none',
-                }}
+                className="adobe-input"
               />
             </div>
 
             <div
               style={{
-                padding: 12,
-                borderRadius: 6,
-                backgroundColor: '#f0fdf4',
-                border: '1px solid #bbf7d0',
+                padding: 16,
+                borderRadius: 'var(--radius-md)',
+                backgroundColor: 'var(--color-surface-10)',
+                border: '1px solid var(--color-neutral)',
                 display: 'flex',
                 justifyContent: 'space-around',
-                fontSize: 12,
-                fontWeight: 600,
+                fontSize: 13,
+                fontWeight: 700,
               }}
             >
               <div style={{ textAlign: 'center' }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>ACCURACY</div>
-                <div style={{ color: 'var(--neon-emerald)' }}>+4.2% Win</div>
+                <div style={{ color: 'var(--color-primary-70)', fontSize: 11 }}>Accuracy</div>
+                <div style={{ color: 'var(--color-secondary)', marginTop: 2 }}>+4.2% Win</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>COST DELTA</div>
-                <div style={{ color: 'var(--neon-emerald)' }}>-$0.003 / 1k</div>
+                <div style={{ color: 'var(--color-primary-70)', fontSize: 11 }}>Cost Delta</div>
+                <div style={{ color: 'var(--color-on-surface)', marginTop: 2 }}>-$0.003 / 1k</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ color: 'var(--text-muted)', fontSize: 10 }}>LATENCY</div>
-                <div style={{ color: 'var(--neon-emerald)' }}>-120ms</div>
+                <div style={{ color: 'var(--color-primary-70)', fontSize: 11 }}>Latency</div>
+                <div style={{ color: 'var(--color-on-surface)', marginTop: 2 }}>-120ms</div>
               </div>
             </div>
 
             {prStatus === 'merged' ? (
-              <div style={{ textAlign: 'center', padding: 12, color: 'var(--neon-emerald)', fontWeight: 700, fontSize: 14 }}>
+              <div style={{ textAlign: 'center', padding: 12, color: 'var(--color-on-surface)', fontWeight: 700, fontSize: 14 }}>
                 ✓ Merged into main branch successfully!
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: 10, marginTop: 6 }}>
+              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
                 <button
                   onClick={() => setShowPrModal(false)}
-                  className="btn-cyber-glass"
-                  style={{ flex: 1 }}
+                  className="adobe-btn-outline"
+                  style={{ flex: 1, height: 40 }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmMerge}
                   disabled={prStatus === 'submitting'}
-                  className="btn-cyber-purple"
-                  style={{ flex: 2 }}
+                  className="adobe-btn-red"
+                  style={{ flex: 2, height: 40 }}
                 >
                   <CheckCircle size={14} />
                   <span>{prStatus === 'submitting' ? 'Merging...' : 'Merge PPR into Production'}</span>

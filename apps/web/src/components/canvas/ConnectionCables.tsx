@@ -48,7 +48,7 @@ export const ConnectionCables: React.FC<ConnectionCablesProps> = ({ edges, nodes
         const pathData = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
 
         const isPromptFlow = from.type === 'prompt' || to.type === 'output';
-        const strokeColor = isPromptFlow ? '#0284c7' : '#16a34a';
+        const strokeColor = isPromptFlow ? '#EB1000' : '#000000';
 
         return (
           <g key={edge.id}>
@@ -56,7 +56,7 @@ export const ConnectionCables: React.FC<ConnectionCablesProps> = ({ edges, nodes
             <path
               d={pathData}
               fill="none"
-              stroke="#e2e8f0"
+              stroke="#E5E7EB"
               strokeWidth={5}
               strokeLinecap="round"
             />
@@ -70,8 +70,8 @@ export const ConnectionCables: React.FC<ConnectionCablesProps> = ({ edges, nodes
               className={edge.isActive ? 'cable-flowing' : ''}
             />
             {/* Origin & Destination Port Dots */}
-            <circle cx={x1} cy={y1} r={4} fill="#0284c7" />
-            <circle cx={x2} cy={y2} r={4} fill={isPromptFlow ? '#7c3aed' : '#16a34a'} />
+            <circle cx={x1} cy={y1} r={4} fill="#000000" />
+            <circle cx={x2} cy={y2} r={4} fill={isPromptFlow ? '#EB1000' : '#4D4D4D'} />
           </g>
         );
       })}

@@ -28,7 +28,7 @@ export function buildRoomId(projectId: string, documentId: string): string {
 /** Parse a CRDT room ID into its components */
 export function parseRoomId(roomId: string): { projectId: string; documentId: string } {
   const separatorIndex = roomId.indexOf(CRDT_ROOM_SEPARATOR);
-  if (separatorIndex === -1) {
+  if (separatorIndex <= 0 || separatorIndex === roomId.length - 1) {
     throw new Error(`Invalid room ID format: ${roomId}`);
   }
   return {

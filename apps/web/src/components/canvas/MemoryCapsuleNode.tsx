@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, ShieldCheck, Trash2, GripVertical, GitFork } from 'lucide-react';
+import { Database, Trash2, GripVertical, GitFork } from 'lucide-react';
 import { CanvasNodeData } from '../../hooks/useCrdtSync';
 
 interface MemoryCapsuleNodeProps {
@@ -11,19 +11,19 @@ interface MemoryCapsuleNodeProps {
 
 export const MemoryCapsuleNode: React.FC<MemoryCapsuleNodeProps> = ({
   node,
-  onUpdate,
+  onUpdate: _onUpdate,
   onDelete,
   isSelected,
 }) => {
   return (
     <div
-      className="glass-panel"
+      className="adobe-card"
       style={{
         width: 340,
         padding: 16,
-        background: '#ffffff',
-        border: isSelected ? '2px solid var(--neon-emerald)' : '1px solid var(--border-subtle)',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
+        background: 'var(--color-surface)',
+        border: isSelected ? '2px solid var(--color-primary)' : '1px solid var(--color-neutral)',
+        borderTop: '3px solid var(--color-primary-90)',
       }}
     >
       {/* Left Port (Input from Document) */}
@@ -34,9 +34,9 @@ export const MemoryCapsuleNode: React.FC<MemoryCapsuleNodeProps> = ({
           top: '50%',
           width: 14,
           height: 14,
-          borderRadius: '50%',
-          backgroundColor: 'var(--neon-emerald)',
-          border: '2px solid #ffffff',
+          borderRadius: 'var(--radius-full)',
+          backgroundColor: 'var(--color-primary)',
+          border: '2px solid var(--color-surface)',
         }}
       />
 
@@ -47,23 +47,34 @@ export const MemoryCapsuleNode: React.FC<MemoryCapsuleNodeProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           marginBottom: 10,
-          paddingBottom: 8,
-          borderBottom: '1px solid var(--border-subtle)',
+          paddingBottom: 10,
+          borderBottom: '1px solid var(--color-neutral)',
           cursor: 'grab',
         }}
         className="drag-handle"
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <GripVertical size={14} color="var(--text-muted)" />
-          <Database size={15} color="var(--neon-emerald)" />
-          <span style={{ fontWeight: 700, fontSize: 12, color: 'var(--text-primary)' }}>
+          <GripVertical size={14} color="var(--color-primary-40)" />
+          <Database size={15} color="var(--color-primary)" />
+          <span style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--color-on-surface)' }}>
             {node.title || 'Memory Capsule'}
           </span>
         </div>
         <button
           onClick={onDelete}
           title="Soft Delete Memory (30-Day Recovery)"
-          style={{ background: 'none', border: 'none', color: 'var(--neon-red)', cursor: 'pointer' }}
+          style={{
+            width: 26,
+            height: 26,
+            borderRadius: 'var(--radius-full)',
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--color-secondary)',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
         >
           <Trash2 size={13} />
         </button>
@@ -72,27 +83,27 @@ export const MemoryCapsuleNode: React.FC<MemoryCapsuleNodeProps> = ({
       {/* Memory Snippet */}
       <div
         style={{
-          backgroundColor: '#f8fafc',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 6,
+          backgroundColor: 'var(--color-surface-10)',
+          border: '1px solid var(--color-neutral)',
+          borderRadius: 'var(--radius-md)',
           padding: '10px 12px',
-          fontSize: 11,
+          fontSize: 12,
           fontFamily: 'var(--font-mono)',
-          lineHeight: 1.5,
-          color: 'var(--text-primary)',
-          marginBottom: 10,
+          lineHeight: 1.55,
+          color: 'var(--color-on-surface)',
+          marginBottom: 12,
         }}
       >
         {node.content}
       </div>
 
       {/* Footer / Lineage */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 10, color: 'var(--text-muted)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-          <GitFork size={12} color="var(--neon-emerald)" />
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-primary-70)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontWeight: 600 }}>
+          <GitFork size={12} color="var(--color-primary)" />
           <span>Lineage: Append-only</span>
         </div>
-        <span className="badge-neon-emerald" style={{ fontSize: 9 }}>
+        <span className="adobe-chip-dark" style={{ fontSize: 10, padding: '2px 8px' }}>
           Cosine Sim: 0.94
         </span>
       </div>

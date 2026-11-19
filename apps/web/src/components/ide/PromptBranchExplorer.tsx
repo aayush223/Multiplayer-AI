@@ -7,10 +7,7 @@ import {
   Plus,
   ChevronDown,
   ChevronRight,
-  Sparkles,
   ShieldCheck,
-  CheckCircle2,
-  Clock,
 } from 'lucide-react';
 import { PromptPullRequest } from '../../services/apiClient';
 
@@ -43,10 +40,10 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
   return (
     <aside
       style={{
-        width: 270,
+        width: 280,
         height: '100%',
-        backgroundColor: 'var(--bg-secondary)',
-        borderRight: '1px solid var(--border-subtle)',
+        backgroundColor: 'var(--color-surface-10)',
+        borderRight: '1px solid var(--color-neutral)',
         display: 'flex',
         flexDirection: 'column',
         userSelect: 'none',
@@ -56,34 +53,25 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
       {/* Header */}
       <div
         style={{
-          padding: '12px 14px',
-          borderBottom: '1px solid var(--border-subtle)',
+          padding: '14px 16px',
+          borderBottom: '1px solid var(--color-neutral)',
+          backgroundColor: 'var(--color-surface)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <GitBranch size={15} color="var(--neon-cyan)" />
-          <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+          <GitBranch size={15} color="var(--color-primary)" />
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-on-surface)' }}>
             Prompt Branches
           </span>
         </div>
         <button
           onClick={onNewBranch}
           title="Create New Prompt Branch"
-          style={{
-            background: '#f1f5f9',
-            border: '1px solid #e2e8f0',
-            borderRadius: 5,
-            color: 'var(--neon-cyan)',
-            padding: '3px 6px',
-            fontSize: 11,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4,
-          }}
+          className="adobe-btn-dark"
+          style={{ height: 28, padding: '0 12px', fontSize: 12 }}
         >
           <Plus size={12} />
           <span>New</span>
@@ -91,8 +79,8 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
       </div>
 
       {/* Active Branch Capsule */}
-      <div style={{ padding: '10px 14px', background: '#ffffff', borderBottom: '1px solid var(--border-subtle)' }}>
-        <div style={{ fontSize: 10, color: 'var(--text-muted)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <div style={{ padding: '14px 16px', background: 'var(--color-surface)', borderBottom: '1px solid var(--color-neutral)' }}>
+        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-primary-70)', marginBottom: 8 }}>
           Current Workspace Branch
         </div>
         <div
@@ -100,78 +88,71 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            background: '#ffffff',
-            border: '1px solid var(--neon-cyan)',
-            borderRadius: 6,
-            padding: '6px 10px',
-            color: 'var(--neon-cyan)',
-            fontWeight: 600,
-            fontSize: 12,
+            background: 'var(--color-surface)',
+            border: '1.5px solid var(--color-primary)',
+            borderRadius: 'var(--radius-md)',
+            padding: '8px 12px',
+            color: 'var(--color-primary)',
+            fontWeight: 700,
+            fontSize: 13,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             <span style={{ fontSize: 14 }}>⎇</span>
             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{currentBranch}</span>
           </div>
-          <span className="badge-neon-cyan" style={{ fontSize: 9, padding: '1px 5px' }}>
+          <span className="adobe-chip-red" style={{ fontSize: 10, padding: '2px 8px' }}>
             HEAD
           </span>
         </div>
       </div>
 
       {/* Section 1: Prompt Pull Requests (PPR) */}
-      <div style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+      <div style={{ borderBottom: '1px solid var(--color-neutral)' }}>
         <div
           onClick={() => setIsPrSectionOpen(!isPrSectionOpen)}
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '8px 14px',
+            padding: '10px 16px',
             cursor: 'pointer',
-            color: 'var(--text-secondary)',
-            fontSize: 11,
+            color: 'var(--color-on-surface)',
+            fontSize: 13,
             fontWeight: 700,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {isPrSectionOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            <GitPullRequest size={13} color="var(--neon-purple)" />
+            <GitPullRequest size={13} color="var(--color-secondary)" />
             <span>Prompt PRs ({activePrs.length})</span>
           </div>
         </div>
 
         {isPrSectionOpen && (
-          <div style={{ padding: '0 10px 10px 10px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <div style={{ padding: '0 14px 14px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             {activePrs.map((pr) => (
               <div
                 key={pr.id}
                 onClick={() => onSelectPr(pr)}
+                className="adobe-card-interactive"
                 style={{
-                  padding: '8px 10px',
-                  background: '#ffffff',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: 6,
+                  padding: '10px 12px',
                   cursor: 'pointer',
-                  transition: 'all 0.15s ease',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.borderColor = 'var(--neon-purple)')}
-                onMouseLeave={(e) => (e.currentTarget.style.borderColor = 'var(--border-subtle)')}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, gap: 6 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--color-on-surface)' }}>
                     #{pr.id.slice(-2)} {pr.title}
                   </span>
                   <span
-                    className={pr.status === 'merged' ? 'badge-neon-emerald' : 'badge-neon-purple'}
-                    style={{ fontSize: 9, padding: '1px 5px' }}
+                    className={pr.status === 'merged' ? 'adobe-chip-dark' : 'adobe-chip-red'}
+                    style={{ fontSize: 10, padding: '2px 8px' }}
                   >
                     {pr.status === 'merged' ? 'Merged' : 'In Review'}
                   </span>
                 </div>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div style={{ fontSize: 11.5, color: 'var(--color-primary-70)', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <span>{pr.sourceBranch}</span>
                   <span>➔</span>
                   <span>{pr.targetBranch}</span>
@@ -182,15 +163,15 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    fontSize: 10,
-                    color: 'var(--neon-emerald)',
-                    fontWeight: 600,
+                    fontSize: 11,
+                    color: 'var(--color-primary)',
+                    fontWeight: 700,
                   }}
                 >
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                    <TrendingUp size={11} /> {pr.benchmarkDelta.accuracy}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <TrendingUp size={11} color="var(--color-secondary)" /> {pr.benchmarkDelta.accuracy}
                   </span>
-                  <span style={{ color: 'var(--text-muted)' }}>{pr.author}</span>
+                  <span style={{ color: 'var(--color-primary-40)', fontWeight: 400 }}>{pr.author}</span>
                 </div>
               </div>
             ))}
@@ -206,24 +187,22 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '8px 14px',
+            padding: '10px 16px',
             cursor: 'pointer',
-            color: 'var(--text-secondary)',
-            fontSize: 11,
+            color: 'var(--color-on-surface)',
+            fontSize: 13,
             fontWeight: 700,
-            letterSpacing: '0.06em',
-            textTransform: 'uppercase',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {isTreeSectionOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            <GitCommit size={13} color="var(--neon-cyan)" />
+            <GitCommit size={13} color="var(--color-primary)" />
             <span>Branch Lineage</span>
           </div>
         </div>
 
         {isTreeSectionOpen && (
-          <div style={{ padding: '0 10px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <div style={{ padding: '0 14px 14px 14px', display: 'flex', flexDirection: 'column', gap: 6 }}>
             {branches.map((b) => {
               const isSelected = currentBranch === b.name;
               return (
@@ -231,35 +210,35 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
                   key={b.name}
                   onClick={() => onSelectBranch(b.name)}
                   style={{
-                    padding: '8px 10px',
-                    borderRadius: 6,
-                    background: isSelected ? '#f0f9ff' : 'transparent',
-                    border: `1px solid ${isSelected ? '#bae6fd' : 'transparent'}`,
+                    padding: '10px 12px',
+                    borderRadius: 'var(--radius-md)',
+                    background: isSelected ? 'var(--color-surface)' : 'transparent',
+                    border: isSelected ? '1.5px solid var(--color-primary)' : '1px solid transparent',
                     cursor: 'pointer',
-                    transition: 'all 0.15s ease',
+                    transition: 'border-color 0.15s ease',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 2 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span
                         style={{
                           width: 8,
                           height: 8,
-                          borderRadius: '50%',
-                          backgroundColor: isSelected ? 'var(--neon-cyan)' : 'var(--text-muted)',
+                          borderRadius: 'var(--radius-full)',
+                          backgroundColor: isSelected ? 'var(--color-secondary)' : 'var(--color-primary-40)',
                         }}
                       />
                       <span
                         style={{
-                          fontSize: 12,
-                          fontWeight: isSelected ? 700 : 500,
-                          color: isSelected ? 'var(--neon-cyan)' : 'var(--text-primary)',
+                          fontSize: 12.5,
+                          fontWeight: 700,
+                          color: 'var(--color-on-surface)',
                         }}
                       >
                         {b.name}
                       </span>
                     </div>
-                    <span className="font-mono" style={{ fontSize: 10, color: 'var(--text-muted)' }}>
+                    <span className="font-mono" style={{ fontSize: 11, color: 'var(--color-primary-70)' }}>
                       {b.commit}
                     </span>
                   </div>
@@ -269,12 +248,12 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      fontSize: 10,
-                      color: 'var(--text-secondary)',
+                      fontSize: 11,
+                      color: 'var(--color-primary-70)',
                     }}
                   >
                     <span>{b.author}</span>
-                    <span style={{ color: b.accuracy.startsWith('+') ? 'var(--neon-emerald)' : 'var(--text-secondary)' }}>
+                    <span style={{ color: b.accuracy.startsWith('+') ? 'var(--color-secondary)' : 'var(--color-primary-70)', fontWeight: 700 }}>
                       {b.accuracy}
                     </span>
                   </div>
@@ -288,20 +267,20 @@ export const PromptBranchExplorer: React.FC<PromptBranchExplorerProps> = ({
       {/* Grounded Memory Context Footer */}
       <div
         style={{
-          padding: '10px 14px',
-          borderTop: '1px solid var(--border-subtle)',
-          backgroundColor: '#ffffff',
+          padding: '12px 16px',
+          borderTop: '1px solid var(--color-neutral)',
+          backgroundColor: 'var(--color-surface)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          fontSize: 11,
+          fontSize: 12,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)' }}>
-          <ShieldCheck size={14} color="var(--neon-emerald)" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-on-surface)', fontWeight: 700 }}>
+          <ShieldCheck size={14} color="var(--color-secondary)" />
           <span>Grounded Memories</span>
         </div>
-        <span className="badge-neon-emerald" style={{ fontSize: 10, padding: '1px 6px' }}>
+        <span className="adobe-chip-dark" style={{ fontSize: 11, padding: '2px 8px' }}>
           {memoryCount} Active
         </span>
       </div>

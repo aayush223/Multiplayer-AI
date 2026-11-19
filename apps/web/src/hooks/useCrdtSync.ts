@@ -39,10 +39,10 @@ export interface PeerCursor {
 }
 
 export const PEER_PALETTES = [
-  { name: 'Alice (Lead)', color: '#00F2FE' },
-  { name: 'Bob (ML Eng)', color: '#EC4899' },
-  { name: 'Carol (Design)', color: '#A855F7' },
-  { name: 'Dave (Backend)', color: '#10B981' },
+  { name: 'Alice (Lead)', color: '#EB1000' },
+  { name: 'Bob (ML Eng)', color: '#000000' },
+  { name: 'Carol (Design)', color: '#4D4D4D' },
+  { name: 'Dave (Backend)', color: '#1A1A1A' },
 ];
 
 export function useCrdtSync(projectId: string, documentId: string, currentUser: { id: string; name: string; color: string }) {
@@ -53,6 +53,8 @@ export function useCrdtSync(projectId: string, documentId: string, currentUser: 
 
   const docRef = useRef<Y.Doc | null>(null);
   const providerRef = useRef<WebsocketProvider | null>(null);
+  const currentUserRef = useRef(currentUser);
+  currentUserRef.current = currentUser;
   const roomId = `${projectId}:${documentId}`;
 
   useEffect(() => {
@@ -137,9 +139,9 @@ export function useCrdtSync(projectId: string, documentId: string, currentUser: 
       // Awareness / Presence
       const awareness = provider.awareness;
       awareness.setLocalStateField('user', {
-        id: currentUser.id,
-        name: currentUser.name,
-        color: currentUser.color,
+        id: currentUserRef.current.id,
+        name: currentUserRef.current.name,
+        color: currentUserRef.current.color,
       });
 
       awareness.on('change', () => {
@@ -167,9 +169,20 @@ export function useCrdtSync(projectId: string, documentId: string, currentUser: 
 
     return () => {
       providerRef.current?.destroy();
+      providerRef.current = null;
       doc.destroy();
+      docRef.current = null;
     };
-  }, [roomId, currentUser.id, currentUser.name, currentUser.color]);
+  }, [roomId]);
+
+  // Update multiplayer presence metadata without resetting the Y.Doc or canvas state
+  useEffect(() => {
+    providerRef.current?.awareness.setLocalStateField('user', {
+      id: currentUser.id,
+      name: currentUser.name,
+      color: currentUser.color,
+    });
+  }, [currentUser.id, currentUser.name, currentUser.color]);
 
   const updateNodePosition = useCallback((nodeId: string, x: number, y: number) => {
     if (!docRef.current) return;

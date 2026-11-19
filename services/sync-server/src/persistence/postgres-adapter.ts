@@ -6,7 +6,7 @@
  *              Rooms scoped by project_id and document_id.
  *
  * Invariant 7: All tables in minge schema.
- * Invariant 1: project_id scoping on all persistence operations.
+ * Invariant 1: project_id scoping on all persistence operations (fail closed).
  */
 import pg from 'pg';
 import type { ManagedRoom } from '../rooms/manager.js';
@@ -31,6 +31,34 @@ function getPool(): pg.Pool {
 }
 
 /**
+ * Execute a query within a project-scoped RLS transaction.
+ * Uses parameterized set_config(..., true) inside BEGIN/COMMIT to prevent SQL injection
+ * and guarantee RLS session state persists across queries.
+ */
+async function withProjectScope<T>(
+  projectId: string,
+  callback: (client: pg.PoolClient) => Promise<T>
+): Promise<T> {
+  if (!projectId || projectId.trim() === '') {
+    throw new Error('FAIL_CLOSED: project_id is required for CRDT persistence.');
+  }
+
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    await client.query(`SELECT set_config('app.current_project_id', $1, true)`, [projectId]);
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+/**
  * Load the latest snapshot for a room from Postgres.
  * Returns the snapshot binary data if found, null otherwise.
  */
@@ -38,10 +66,7 @@ export async function loadSnapshotFromDB(
   projectId: string,
   documentId: string
 ): Promise<Uint8Array | null> {
-  const client = await getPool().connect();
-  try {
-    await client.query(`SET LOCAL app.current_project_id = '${projectId}'`);
-
+  return withProjectScope(projectId, async (client) => {
     const result = await client.query(
       `SELECT snapshot FROM minge.crdt_snapshots
        WHERE project_id = $1 AND document_id = $2 AND deleted_at IS NULL
@@ -53,9 +78,7 @@ export async function loadSnapshotFromDB(
 
     const snapshotBuffer = result.rows[0].snapshot as Buffer;
     return new Uint8Array(snapshotBuffer);
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /**
@@ -67,10 +90,7 @@ export async function loadUpdatesFromDB(
   documentId: string,
   afterSnapshotId?: string
 ): Promise<Uint8Array[]> {
-  const client = await getPool().connect();
-  try {
-    await client.query(`SET LOCAL app.current_project_id = '${projectId}'`);
-
+  return withProjectScope(projectId, async (client) => {
     let sql = `
       SELECT update_data FROM minge.crdt_updates
       WHERE project_id = $1 AND document_id = $2
@@ -86,9 +106,7 @@ export async function loadUpdatesFromDB(
 
     const result = await client.query(sql, params);
     return result.rows.map((row: { update_data: Buffer }) => new Uint8Array(row.update_data));
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /**
@@ -100,18 +118,13 @@ export async function persistUpdate(
   documentId: string,
   updateData: Uint8Array
 ): Promise<void> {
-  const client = await getPool().connect();
-  try {
-    await client.query(`SET LOCAL app.current_project_id = '${projectId}'`);
-
+  await withProjectScope(projectId, async (client) => {
     await client.query(
       `INSERT INTO minge.crdt_updates (project_id, document_id, update_data)
        VALUES ($1, $2, $3)`,
       [projectId, documentId, Buffer.from(updateData)]
     );
-  } finally {
-    client.release();
-  }
+  });
 }
 
 /**
@@ -120,11 +133,8 @@ export async function persistUpdate(
  */
 export async function persistSnapshot(room: ManagedRoom): Promise<void> {
   const state = encodeRoomState(room);
-  const client = await getPool().connect();
 
-  try {
-    await client.query(`SET LOCAL app.current_project_id = '${room.projectId}'`);
-
+  await withProjectScope(room.projectId, async (client) => {
     await client.query(
       `INSERT INTO minge.crdt_snapshots
         (project_id, document_id, snapshot, update_count_at_snapshot)
@@ -136,12 +146,10 @@ export async function persistSnapshot(room: ManagedRoom): Promise<void> {
          created_at = NOW()`,
       [room.projectId, room.documentId, Buffer.from(state), room.updateCount]
     );
+  });
 
-    markSnapshotted(room);
-    console.log(`[persistence] Snapshot saved for room ${room.roomId} (${state.length} bytes)`);
-  } finally {
-    client.release();
-  }
+  markSnapshotted(room);
+  console.log(`[persistence] Snapshot saved for room ${room.roomId} (${state.length} bytes)`);
 }
 
 /**
@@ -158,7 +166,7 @@ export async function initializeRoomFromDB(room: ManagedRoom): Promise<void> {
   const updates = await loadUpdatesFromDB(room.projectId, room.documentId);
   const { applyUpdate } = await import('../rooms/manager.js');
   for (const update of updates) {
-    applyUpdate(room, update);
+    applyUpdate(room, update, 'db-init');
   }
 
   console.log(`[persistence] Room ${room.roomId} initialized from DB (snapshot: ${!!snapshot}, updates: ${updates.length})`);

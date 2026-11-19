@@ -10,6 +10,7 @@ import {
   SOFT_DELETE_RECOVERY_DAYS,
 } from '../packages/shared/src/index.js';
 import {
+  envSchema,
   projectCreateSchema,
   memoryCreateSchema,
   memorySearchSchema,
@@ -53,6 +54,16 @@ describe('Room ID Utilities — Invariant 3', () => {
 
   it('throws on invalid room ID (no separator)', () => {
     expect(() => parseRoomId('no-separator')).toThrow('Invalid room ID');
+  });
+
+  it('throws on invalid room ID with empty projectId or documentId', () => {
+    expect(() => parseRoomId(':doc-only')).toThrow('Invalid room ID');
+    expect(() => parseRoomId('proj-only:')).toThrow('Invalid room ID');
+  });
+
+  it('envSchema defaults PORT to 3000 (matching Vite proxy and .env.example)', () => {
+    const parsed = envSchema.parse({});
+    expect(parsed.PORT).toBe(3000);
   });
 });
 

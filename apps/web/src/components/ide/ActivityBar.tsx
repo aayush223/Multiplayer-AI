@@ -6,7 +6,6 @@ import {
   GitPullRequest,
   LayoutGrid,
   Settings,
-  Sparkles,
   Database,
 } from 'lucide-react';
 
@@ -41,42 +40,20 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
   return (
     <aside
       style={{
-        width: 50,
+        width: 56,
         height: '100%',
-        backgroundColor: '#f8fafc',
-        borderRight: '1px solid var(--border-subtle)',
+        backgroundColor: 'var(--color-surface)',
+        borderRight: '1px solid var(--color-neutral)',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '10px 0',
+        padding: '12px 0',
         zIndex: 20,
       }}
     >
       {/* Top Section */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, width: '100%' }}>
-        {/* Antigravity / Minge Emblem (Solid Clean) */}
-        <div
-          title="Minge Multiplayer AI Platform"
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 6,
-            backgroundColor: '#0f172a',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: '#ffffff',
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: 'pointer',
-            marginBottom: 6,
-          }}
-        >
-          M
-        </div>
-
-        {/* Navigation Items */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, width: '100%' }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = !isCanvasMode && activeTab === item.id;
@@ -90,20 +67,32 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
               title={item.label}
               style={{
                 position: 'relative',
-                width: 38,
-                height: 38,
-                borderRadius: 6,
-                background: isActive ? '#e2e8f0' : 'transparent',
+                width: 40,
+                height: 40,
+                borderRadius: 'var(--radius-md)',
+                background: isActive ? 'var(--color-primary)' : 'transparent',
                 border: 'none',
-                color: isActive ? '#0284c7' : 'var(--text-secondary)',
+                color: isActive ? 'var(--color-tertiary)' : 'var(--color-primary-70)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                transition: 'all 0.15s ease',
+                transition: 'background-color 0.15s ease, color 0.15s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = 'var(--color-surface-10)';
+                  e.currentTarget.style.color = 'var(--color-primary)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!isActive) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
+                  e.currentTarget.style.color = 'var(--color-primary-70)';
+                }
               }}
             >
-              <Icon size={19} strokeWidth={isActive ? 2.2 : 1.7} />
+              <Icon size={19} strokeWidth={isActive ? 2.2 : 1.75} />
               {item.badge && (
                 <span
                   style={{
@@ -112,10 +101,11 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
                     right: 2,
                     fontSize: 9,
                     fontWeight: 700,
-                    padding: '1px 3px',
-                    borderRadius: 4,
-                    backgroundColor: '#7c3aed',
-                    color: '#ffffff',
+                    padding: '1px 4px',
+                    borderRadius: 'var(--radius-full)',
+                    backgroundColor: 'var(--color-secondary)',
+                    color: 'var(--color-tertiary)',
+                    lineHeight: '11px',
                   }}
                 >
                   {item.badge}
@@ -125,12 +115,12 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
                 <div
                   style={{
                     position: 'absolute',
-                    left: 0,
+                    left: -8,
                     top: 8,
                     bottom: 8,
                     width: 3,
                     borderRadius: '0 3px 3px 0',
-                    backgroundColor: '#0284c7',
+                    backgroundColor: 'var(--color-secondary)',
                   }}
                 />
               )}
@@ -144,19 +134,19 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
         {/* Toggle Canvas Button */}
         <button
           onClick={onToggleCanvas}
-          title={isCanvasMode ? 'Switch to Prompt IDE (Antigravity)' : 'Switch to AI Canvas (Roobinium)'}
+          title={isCanvasMode ? 'Switch to Prompt IDE' : 'Switch to AI Canvas'}
           style={{
-            width: 38,
-            height: 38,
-            borderRadius: 6,
-            backgroundColor: isCanvasMode ? '#0284c7' : '#ffffff',
-            border: `1px solid ${isCanvasMode ? '#0284c7' : '#e2e8f0'}`,
-            color: isCanvasMode ? '#ffffff' : '#0284c7',
+            width: 40,
+            height: 40,
+            borderRadius: 'var(--radius-full)',
+            backgroundColor: isCanvasMode ? 'var(--color-primary)' : 'var(--color-surface)',
+            border: '1.5px solid var(--color-primary)',
+            color: isCanvasMode ? 'var(--color-tertiary)' : 'var(--color-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            transition: 'all 0.15s ease',
+            transition: 'background-color 0.15s ease',
           }}
         >
           <LayoutGrid size={18} />
@@ -166,17 +156,17 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
         <div
           title={`Active User: ${user.name}`}
           style={{
-            width: 28,
-            height: 28,
-            borderRadius: '50%',
+            width: 30,
+            height: 30,
+            borderRadius: 'var(--radius-full)',
             backgroundColor: user.color,
-            color: '#ffffff',
+            color: 'var(--color-tertiary)',
             fontWeight: 700,
             fontSize: 12,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            border: '2px solid #ffffff',
+            border: '1.5px solid var(--color-neutral)',
             cursor: 'pointer',
           }}
         >
@@ -189,9 +179,10 @@ export const ActivityBar: React.FC<ActivityBarProps> = ({
           style={{
             width: 36,
             height: 36,
+            borderRadius: 'var(--radius-full)',
             background: 'transparent',
             border: 'none',
-            color: 'var(--text-muted)',
+            color: 'var(--color-primary-70)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

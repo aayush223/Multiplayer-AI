@@ -49,7 +49,12 @@ export const MultiplayerPresence: React.FC<MultiplayerPresenceProps> = ({ peers,
                 transform: 'rotate(-20deg)',
               }}
             >
-              <polygon points="3 3 3 21 8.5 16.5 13 22 16 20 11.5 14.5 18 14.5 3 3" fill={peer.color} />
+              <polygon
+                points="3 3 3 21 8.5 16.5 13 22 16 20 11.5 14.5 18 14.5 3 3"
+                fill={peer.color}
+                stroke="#FFFFFF"
+                strokeWidth="1.5"
+              />
             </svg>
 
             {/* Peer Name Tag */}
@@ -57,14 +62,14 @@ export const MultiplayerPresence: React.FC<MultiplayerPresenceProps> = ({ peers,
               style={{
                 marginLeft: 14,
                 marginTop: -4,
-                padding: '2px 8px',
-                borderRadius: 12,
+                padding: '3px 10px',
+                borderRadius: 'var(--radius-full)',
                 backgroundColor: peer.color,
-                color: '#ffffff',
-                fontSize: 10,
+                color: '#FFFFFF',
+                border: '1px solid rgba(255, 255, 255, 0.85)',
+                fontSize: 11,
                 fontWeight: 700,
                 whiteSpace: 'nowrap',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.15)',
                 display: 'flex',
                 alignItems: 'center',
                 gap: 4,
@@ -75,7 +80,6 @@ export const MultiplayerPresence: React.FC<MultiplayerPresenceProps> = ({ peers,
                 <span
                   style={{
                     display: 'inline-block',
-                    animation: 'glow-breathe 0.8s infinite',
                     fontWeight: 900,
                   }}
                 >

@@ -59,7 +59,17 @@ function resolveProvider(model: string): ProviderConfig {
     };
   }
 
-  if (lowerModel.startsWith('groq/') || lowerModel.includes('llama') || lowerModel.includes('mixtral')) {
+  if (lowerModel.startsWith('groq/')) {
+    const key = process.env['GROQ_API_KEY'];
+    if (!key) throw new Error('GROQ_API_KEY not configured.');
+    return {
+      baseUrl: 'https://api.groq.com/openai/v1',
+      apiKey: key,
+      name: 'groq',
+    };
+  }
+
+  if (lowerModel.includes('llama') || lowerModel.includes('mixtral')) {
     const key = process.env['GROQ_API_KEY'];
     if (key) {
       return {
@@ -215,7 +225,8 @@ export async function chatCompletion(
  */
 export async function* chatCompletionStream(
   input: ProxyCompletionInput,
-  userId: string
+  userId: string,
+  options?: { skipAuditLog?: boolean }
 ): AsyncGenerator<string, void, undefined> {
   const provider = resolveProvider(input.model);
   const normalizedModel = normalizeModelName(input.model);
@@ -250,49 +261,66 @@ export async function* chatCompletionStream(
   let totalContent = '';
   let promptTokens = 0;
   let completionTokens = 0;
+  let buffer = '';
+
+  const processLine = (rawLine: string): string | null => {
+    const trimmed = rawLine.trim();
+    if (!trimmed.startsWith('data: ')) return null;
+    const data = trimmed.substring(6).trim();
+    if (data === '[DONE]') {
+      return 'data: [DONE]\n\n';
+    }
+
+    try {
+      const parsed = JSON.parse(data) as {
+        choices?: Array<{ delta?: { content?: string } }>;
+        usage?: { prompt_tokens: number; completion_tokens: number };
+      };
+      const content = parsed.choices?.[0]?.delta?.content ?? '';
+      if (content) {
+        totalContent += content;
+      }
+      if (parsed.usage) {
+        promptTokens = parsed.usage.prompt_tokens;
+        completionTokens = parsed.usage.completion_tokens;
+      }
+      return `data: ${data}\n\n`;
+    } catch {
+      return `data: ${data}\n\n`;
+    }
+  };
 
   try {
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n').filter(l => l.startsWith('data: '));
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
 
       for (const line of lines) {
-        const data = line.substring(6).trim();
-        if (data === '[DONE]') {
-          yield 'data: [DONE]\n\n';
-          continue;
-        }
-
-        try {
-          const parsed = JSON.parse(data) as {
-            choices?: Array<{ delta?: { content?: string } }>;
-            usage?: { prompt_tokens: number; completion_tokens: number };
-          };
-          const content = parsed.choices?.[0]?.delta?.content ?? '';
-          if (content) {
-            totalContent += content;
-          }
-          if (parsed.usage) {
-            promptTokens = parsed.usage.prompt_tokens;
-            completionTokens = parsed.usage.completion_tokens;
-          }
-          yield `data: ${data}\n\n`;
-        } catch {
-          yield `data: ${data}\n\n`;
-        }
+        const out = processLine(line);
+        if (out) yield out;
       }
+    }
+
+    // Flush any trailing buffered line after stream closes
+    buffer += decoder.decode();
+    if (buffer.trim()) {
+      const out = processLine(buffer);
+      if (out) yield out;
     }
   } finally {
     reader.releaseLock();
-    const latencyMs = Date.now() - startTime;
-    // Estimate tokens if not provided
-    if (completionTokens === 0) {
-      completionTokens = Math.ceil(totalContent.length / 4);
+    if (!options?.skipAuditLog) {
+      const latencyMs = Date.now() - startTime;
+      // Estimate tokens if not provided
+      if (completionTokens === 0) {
+        completionTokens = Math.ceil(totalContent.length / 4);
+      }
+      await logAudit(input.project_id, userId, provider.name, normalizedModel, promptTokens, completionTokens, latencyMs, 200);
     }
-    await logAudit(input.project_id, userId, provider.name, normalizedModel, promptTokens, completionTokens, latencyMs, 200);
   }
 }
 

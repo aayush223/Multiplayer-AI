@@ -12,16 +12,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // The store's isValidProjectId guard is the critical gate.
 
 describe('Memory Isolation — Invariant 1: Fail Closed', () => {
-  // Mock the database layer
-  const mockQuery = vi.fn();
-  const mockClient = {
-    query: mockQuery,
-    release: vi.fn(),
-  };
-
   beforeEach(() => {
     vi.resetModules();
-    mockQuery.mockReset();
   });
 
   it('rejects empty string project_id', async () => {
@@ -103,5 +95,51 @@ describe('Memory Isolation — Invariant 1: Fail Closed', () => {
     );
 
     expect(result).toBeNull();
+  });
+
+  it('restoreMemory returns null for missing project_id', async () => {
+    const { restoreMemory } = await import('../services/backend-api/src/memory/store.js');
+
+    const result = await restoreMemory('', 'some-memory-id');
+    expect(result).toBeNull();
+  });
+
+  it('searchMemories rejects invalid embedding dimensions', async () => {
+    const { searchMemories } = await import('../services/backend-api/src/memory/store.js');
+
+    await expect(
+      searchMemories({
+        project_id: 'proj-1',
+        query_embedding: [0.1, 0.2, 0.3],
+        top_k: 5,
+      })
+    ).rejects.toThrow('1536 dimensions');
+  });
+
+  it('supersedeMemory rejects invalid embedding dimensions', async () => {
+    const { supersedeMemory } = await import('../services/backend-api/src/memory/store.js');
+
+    await expect(
+      supersedeMemory(
+        {
+          original_id: 'mem-1',
+          project_id: 'proj-1',
+          content: 'updated',
+          ingested_by_user_id: 'user-1',
+        },
+        [0.1, 0.2]
+      )
+    ).rejects.toThrow('1536 dimensions');
+  });
+
+  it('assertProjectAccess throws on unauthorized project and allows authorized project', async () => {
+    const { assertProjectAccess } = await import('../services/backend-api/src/auth/jwt.js');
+
+    const req = {
+      user: { sub: 'user-1', projectIds: ['proj-allowed'] },
+    } as any;
+
+    expect(() => assertProjectAccess(req, 'proj-allowed')).not.toThrow();
+    expect(() => assertProjectAccess(req, 'proj-forbidden')).toThrow('Access denied to project proj-forbidden');
   });
 });

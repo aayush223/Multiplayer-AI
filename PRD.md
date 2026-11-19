@@ -1,4 +1,5 @@
 # Product Requirements Document (PRD)
+
 ## Project: Minge — Multiplayer AI Platform
 
 ---
@@ -6,13 +7,17 @@
 ## 1. Executive Summary & Core Thesis
 
 ### 1.1 The Problem
+
 Today, AI assistance is locked in isolated, private chat boxes per user. When team members interact with an AI model, their context, steering instructions, prompt modifications, and discovered insights remain siloed on their individual machines. Sharing prompts requires copying text into Slack or documentation, which loses grounding context, model parameters, and execution history.
 
 ### 1.2 The Solution & Thesis
+
 **Minge** transforms AI from an isolated single-player tool into a **shared, persistent, multiplayer team member**. Multiple engineers and team members interact within the same live session simultaneously with shared project memory, real-time presence, and versioned artifacts — bringing the collaborative leap of Google Docs and Figma to AI systems.
 
 ### 1.3 The Two Collaboration Primitives
+
 The platform recognizes that engineers and product collaborators think about AI differently:
+
 1. **Prompt IDE (Engineers)**: Discrete, versioned, git-shaped. Prompts are treated as backend software artifacts with branch isolation, testing, Prompt Pull Requests (PPR), visual diffing, and merging into production.
 2. **AI Canvas (Collaborators & Designers)**: Spatial, fluid, and synchronous. Multiple users share an infinite canvas, see each other's live cursors, drop reference documents, and steer live AI agents simultaneously. Correction is immediate via undo/redo rather than code review diffs.
 
@@ -44,7 +49,7 @@ To maintain architectural integrity and prevent drift, the technology choices ar
 
 ## 3. System Architecture & Topology
 
-```
+```text
                                ┌─────────────────────────────────────────┐
                                │       Desktop Prompt IDE (Void)         │
                                │  - Tabbed Editor & Source Control       │
@@ -224,6 +229,7 @@ CREATE POLICY project_isolation_audit ON minge.proxy_audit_logs
 ## 5. Core Functional Specifications
 
 ### 5.1 Project-Scoped Memory Layer & Anti-Bleed Guarantees
+
 - **Hard Schema Constraint**: Every memory record contains `project_id UUID NOT NULL REFERENCES projects(id)`.
 - **Query Builder Isolation**: Memory retrieval queries MUST receive a validated `project_id`. If `project_id` is missing, undefined, or empty, the query builder **fails closed**, returning an empty set immediately with zero database roundtrips.
 - **Append-Only Immutability**:
@@ -234,12 +240,14 @@ CREATE POLICY project_isolation_audit ON minge.proxy_audit_logs
 - **Semantic Retrieval**: Top-K retrieval utilizes cosine distance (`<=>` operator) with HNSW indexing, combining semantic score + recency weighting + explicit user pins.
 
 ### 5.2 Multi-Provider LLM Proxy Gateway
+
 - **Zero Client Credential Leakage**: Clients never receive or store upstream provider API keys. All keys (`OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`) reside exclusively in server-side configuration.
 - **Standardized OpenAI-Compatible Ingestion**: Accepts standard chat completion requests (`messages`, `model`, `temperature`, `stream`) and translates them to the configured provider.
 - **Streaming SSE**: Native Server-Sent Events streaming with low time-to-first-token.
 - **Per-User Attribution**: Every request requires an `X-User-Id` header. The proxy records token consumption per user into `proxy_audit_logs` for team visibility and quota enforcement.
 
 ### 5.3 Standalone Yjs Real-Time Sync Server
+
 - **Isolated Room Format**: Rooms are formatted strictly as `${project_id}:${document_id}`. Clients cannot subscribe across project boundaries.
 - **Dual Persistence Strategy**:
   - *Periodic Snapshots*: Periodically (every N updates or M seconds of inactivity), the in-memory document is serialized with `Y.encodeStateAsUpdate(doc)` and written to `crdt_snapshots`.
@@ -248,6 +256,7 @@ CREATE POLICY project_isolation_audit ON minge.proxy_audit_logs
 - **AI Agent as Collaborative Peer**: The backend API can dispatch synthetic Yjs updates directly to the sync server room, allowing AI edits to merge smoothly alongside human edits without clobbering.
 
 ### 5.4 Prompt IDE (Desktop - Void Fork)
+
 - **Versioned Prompt Artifacts**: Prompts are stored in `.prompt.json` format containing the prompt text, model parameters, and references to grounded memory IDs.
 - **Prompt Branching & PRs**:
   - Developers can create a branch (e.g., `experiment/clarify-summary`) to test prompt changes in isolation against benchmark evaluations.
@@ -255,6 +264,7 @@ CREATE POLICY project_isolation_audit ON minge.proxy_audit_logs
   - Team members review and approve before merging into the `main` branch.
 
 ### 5.5 AI Canvas (Browser - Roobinium Cyberpunk UI)
+
 - **Infinite Spatial Workspace**: Infinite pan, zoom, and coordinate transform viewport.
 - **Multiplayer Presence**: Live peer cursors with individual names and custom avatar colors rendered using Yjs Awareness.
 - **Card Primitives**:
@@ -262,18 +272,22 @@ CREATE POLICY project_isolation_audit ON minge.proxy_audit_logs
   - *Document Node*: File/text drop zone that auto-chunks and creates project memory embeddings.
   - *AI Output Node*: Streaming response card with undo/redo branching.
 - **Visual Design (Roobinium Aesthetic)**:
+
 ### 5.6 30-Day Recovery Period & Soft-Deletion Lifecycle (Terms v0.1 Compliance)
+
 - **Soft-Delete Invariant**: Deleting a memory item, prompt package, or canvas document sets `deleted_at = NOW()` rather than executing a destructive `DELETE`.
 - **30-Day Recovery Window**: Soft-deleted entities remain recoverable for 30 calendar days via an explicit `POST /api/projects/:id/.../restore` endpoint.
 - **Automated Retention Purge**: A scheduled background worker permanently purges records where `deleted_at < NOW() - INTERVAL '30 days'`.
 - **Query Filtering**: All active memory retrieval queries, prompt listings, and room sync snapshots automatically filter `WHERE deleted_at IS NULL`.
 
 ### 5.7 User Memory Inspection & Deletion Controls (Terms Section 9.3)
+
 - **Inspect Endpoint**: Users can view all ingested memory items, chunk metadata, and active embeddings for their project via `GET /api/projects/:id/memories`.
 - **Clear Project Memory**: Users can clear all active project context via `DELETE /api/projects/:id/memories/clear` (soft-deletes all non-deleted project memories with a 30-day recovery undo capability).
 - **Workspace Decoupling**: An individual member leaving or deleting their personal account does NOT delete organization-owned project memories or prompt packages.
 
 ### 5.8 Usage Limits & Quota Enforcement (Terms Sections 4.5 & 14.5)
+
 - **Account Tiers**: `individual` (free tier quotas), `team` (higher concurrency & storage), `enterprise` (custom quotas & dedicated pools).
 - **Proxy Rate Limiting**: Enforced per-minute request limits (e.g. 60 RPM for free tier) and daily token budgets tracked in `proxy_audit_logs`.
 - **File Upload Limits**: Max 25MB per document drop on the canvas for free tier; higher limits for team/enterprise.
@@ -282,7 +296,7 @@ CREATE POLICY project_isolation_audit ON minge.proxy_audit_logs
 
 ## 6. Monorepo Directory Layout
 
-```
+```text
 minge/
 ├── docker-compose.yml              # PostgreSQL 16 + pgvector container
 ├── package.json                    # Workspace root (npm/pnpm workspaces)

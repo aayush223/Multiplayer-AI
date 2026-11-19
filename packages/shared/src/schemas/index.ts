@@ -13,9 +13,13 @@ export const uuidSchema = z.string().min(1).max(255);
 // Environment variables validation
 // ---------------------------------------------------------------------------
 export const envSchema = z.object({
-  PORT: z.coerce.number().default(3001),
+  PORT: z.coerce.number().default(3000),
   SYNC_PORT: z.coerce.number().default(4000),
+  SYNC_GATEWAY_PORT: z.coerce.number().default(4001),
+  SYNC_GATEWAY_URL: z.string().default('http://localhost:4001'),
+  INTERNAL_SYNC_SECRET: z.string().min(16).default('minge_dev_internal_sync_secret_change_in_prod'),
   DATABASE_URL: z.string().default('postgresql://minge:minge_dev_password@localhost:5432/minge'),
+  REDIS_URL: z.string().optional(),
   JWT_SECRET: z.string().min(16).default('minge_dev_jwt_secret_change_in_production_64chars_minimum_required'),
   GEMINI_API_KEY: z.string().optional(),
   OPENROUTER_API_KEY: z.string().optional(),

@@ -1,10 +1,8 @@
 import React from 'react';
 import {
   GitBranch,
-  Wifi,
   Database,
   Cpu,
-  RefreshCw,
   ArchiveRestore,
   ShieldCheck,
 } from 'lucide-react';
@@ -29,63 +27,64 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   return (
     <footer
       style={{
-        height: 24,
-        backgroundColor: 'var(--bg-secondary)',
-        borderTop: '1px solid var(--border-subtle)',
+        height: 28,
+        backgroundColor: 'var(--color-primary)',
+        borderTop: '1px solid var(--color-primary-90)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 12px',
-        fontSize: 11,
-        color: 'var(--text-secondary)',
+        padding: '0 16px',
+        fontSize: 12,
+        lineHeight: '16px',
+        color: 'var(--color-primary-40)',
         userSelect: 'none',
         zIndex: 30,
       }}
     >
       {/* Left items */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         {/* Branch */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: 5,
-            color: 'var(--neon-cyan)',
-            fontWeight: 600,
+            gap: 6,
+            color: 'var(--color-tertiary)',
+            fontWeight: 700,
             cursor: 'pointer',
           }}
         >
-          <GitBranch size={12} />
+          <GitBranch size={12} color="var(--color-secondary)" />
           <span>{currentBranch}*</span>
         </div>
 
         {/* CRDT Sync Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span
             style={{
               width: 7,
               height: 7,
-              borderRadius: '50%',
-              backgroundColor: isCrdtConnected ? 'var(--neon-emerald)' : 'var(--neon-amber)',
+              borderRadius: 'var(--radius-full)',
+              backgroundColor: isCrdtConnected ? 'var(--color-tertiary)' : 'var(--color-secondary)',
             }}
           />
-          <span style={{ color: isCrdtConnected ? 'var(--text-primary)' : 'var(--neon-amber)' }}>
+          <span style={{ color: isCrdtConnected ? 'var(--color-tertiary)' : 'var(--color-secondary)', fontWeight: 600 }}>
             CRDT: {isCrdtConnected ? 'Synced (Yjs Scoped)' : 'Connecting...'}
           </span>
         </div>
 
         {/* Provider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <Cpu size={12} color="var(--neon-purple)" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Cpu size={12} color="var(--color-primary-40)" />
           <span>{activeProvider}: Ready</span>
         </div>
       </div>
 
       {/* Right items */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
         {/* Memory Count */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <Database size={12} color="var(--neon-cyan)" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--color-tertiary)' }}>
+          <Database size={12} color="var(--color-primary-40)" />
           <span>Memories: {memoryCount} active</span>
         </div>
 
@@ -96,13 +95,14 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: 4,
-              background: '#fffbeb',
-              border: '1px solid #fde68a',
-              borderRadius: 4,
-              color: 'var(--neon-amber)',
-              fontSize: 10,
-              padding: '1px 6px',
+              gap: 5,
+              backgroundColor: 'var(--color-secondary)',
+              border: 'none',
+              borderRadius: 'var(--radius-full)',
+              color: 'var(--color-tertiary)',
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '2px 10px',
               cursor: 'pointer',
             }}
           >
@@ -112,13 +112,25 @@ export const StatusBar: React.FC<StatusBarProps> = ({
         )}
 
         {/* RLS Badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'var(--neon-emerald)' }}>
-          <ShieldCheck size={12} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            padding: '2px 8px',
+            borderRadius: 'var(--radius-full)',
+            backgroundColor: 'var(--color-primary-90)',
+            color: 'var(--color-tertiary)',
+            fontSize: 11,
+            fontWeight: 700,
+          }}
+        >
+          <ShieldCheck size={12} color="var(--color-secondary)" />
           <span>RLS Enforced (minge)</span>
         </div>
 
         {/* Encoding */}
-        <span style={{ color: 'var(--text-muted)' }}>UTF-8</span>
+        <span style={{ color: 'var(--color-primary-40)' }}>UTF-8</span>
       </div>
     </footer>
   );

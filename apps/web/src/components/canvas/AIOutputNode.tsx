@@ -3,7 +3,6 @@ import {
   Sparkles,
   GitBranch,
   Database,
-  RotateCcw,
   Copy,
   Check,
   Zap,
@@ -24,7 +23,7 @@ interface AIOutputNodeProps {
 
 export const AIOutputNode: React.FC<AIOutputNodeProps> = ({
   node,
-  onUpdate,
+  onUpdate: _onUpdate,
   onDelete,
   onBranchToIde,
   onPinAsMemory,
@@ -47,13 +46,13 @@ export const AIOutputNode: React.FC<AIOutputNodeProps> = ({
 
   return (
     <div
-      className="glass-panel"
+      className="adobe-card"
       style={{
         width: 400,
         padding: 16,
-        backgroundColor: '#ffffff',
-        border: isSelected ? '2px solid var(--neon-purple)' : '1px solid var(--border-subtle)',
-        boxShadow: isSelected ? '0 2px 8px rgba(124, 58, 237, 0.2)' : '0 1px 3px rgba(0, 0, 0, 0.06)',
+        backgroundColor: 'var(--color-surface)',
+        border: isSelected ? '2px solid var(--color-secondary)' : '1px solid var(--color-neutral)',
+        borderTop: '3px solid var(--color-secondary)',
       }}
     >
       {/* Left Port Indicator (Input from PromptNode) */}
@@ -64,9 +63,9 @@ export const AIOutputNode: React.FC<AIOutputNodeProps> = ({
           top: '50%',
           width: 14,
           height: 14,
-          borderRadius: '50%',
-          backgroundColor: 'var(--neon-purple)',
-          border: '2px solid #ffffff',
+          borderRadius: 'var(--radius-full)',
+          backgroundColor: 'var(--color-secondary)',
+          border: '2px solid var(--color-surface)',
         }}
       />
 
@@ -77,31 +76,53 @@ export const AIOutputNode: React.FC<AIOutputNodeProps> = ({
           alignItems: 'center',
           justifyContent: 'space-between',
           marginBottom: 10,
-          paddingBottom: 8,
-          borderBottom: '1px solid var(--border-subtle)',
+          paddingBottom: 10,
+          borderBottom: '1px solid var(--color-neutral)',
           cursor: 'grab',
         }}
         className="drag-handle"
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <GripVertical size={14} color="var(--text-muted)" />
-          <Sparkles size={16} color="var(--neon-purple)" />
-          <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)' }}>
+          <GripVertical size={14} color="var(--color-primary-40)" />
+          <Sparkles size={15} color="var(--color-secondary)" />
+          <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-on-surface)' }}>
             {node.title || 'AI Generated Output'}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <button
             onClick={handleCopy}
             title="Copy Output"
-            style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 'var(--radius-full)',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--color-primary-70)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
-            {copied ? <Check size={14} color="var(--neon-emerald)" /> : <Copy size={14} />}
+            {copied ? <Check size={14} color="var(--color-primary)" /> : <Copy size={14} />}
           </button>
           <button
             onClick={onDelete}
             title="Delete Node"
-            style={{ background: 'none', border: 'none', color: 'var(--neon-red)', cursor: 'pointer' }}
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 'var(--radius-full)',
+              background: 'transparent',
+              border: 'none',
+              color: 'var(--color-secondary)',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
           >
             <Trash2 size={14} />
           </button>
@@ -111,16 +132,16 @@ export const AIOutputNode: React.FC<AIOutputNodeProps> = ({
       {/* Output Content */}
       <div
         style={{
-          backgroundColor: '#f8fafc',
-          border: '1px solid var(--border-subtle)',
-          borderRadius: 6,
+          backgroundColor: 'var(--color-surface-10)',
+          border: '1px solid var(--color-neutral)',
+          borderRadius: 'var(--radius-md)',
           padding: '12px 14px',
           maxHeight: 220,
           overflowY: 'auto',
           fontFamily: 'var(--font-mono)',
-          fontSize: 12,
+          fontSize: 12.5,
           lineHeight: 1.6,
-          color: 'var(--text-primary)',
+          color: 'var(--color-on-surface)',
           whiteSpace: 'pre-wrap',
           marginBottom: 12,
         }}
@@ -134,20 +155,20 @@ export const AIOutputNode: React.FC<AIOutputNodeProps> = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          fontSize: 11,
-          color: 'var(--text-muted)',
+          fontSize: 12,
+          color: 'var(--color-primary-70)',
           marginBottom: 12,
         }}
       >
-        <div style={{ display: 'flex', gap: 10 }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Zap size={11} color="var(--neon-cyan)" /> {node.tokens || 340} tokens
+        <div style={{ display: 'flex', gap: 12 }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+            <Zap size={12} color="var(--color-secondary)" /> {node.tokens || 340} tokens
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Clock size={11} color="var(--neon-purple)" /> {node.latency || '0.82s'}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+            <Clock size={12} color="var(--color-primary-70)" /> {node.latency || '0.82s'}
           </span>
         </div>
-        <span className="badge-neon-emerald" style={{ fontSize: 9 }}>
+        <span className="adobe-chip" style={{ fontSize: 11, padding: '2px 10px' }}>
           Audited
         </span>
       </div>
@@ -156,27 +177,21 @@ export const AIOutputNode: React.FC<AIOutputNodeProps> = ({
       <div style={{ display: 'flex', gap: 8 }}>
         <button
           onClick={() => onBranchToIde(node)}
-          className="btn-cyber-glass"
-          style={{ flex: 1, fontSize: 11, padding: '6px 8px' }}
+          className="adobe-btn-dark"
+          style={{ flex: 1, height: 34, fontSize: 12, padding: '0 12px' }}
           title="Convert this prompt & output into a versioned IDE branch"
         >
-          <GitBranch size={12} color="var(--neon-cyan)" />
+          <GitBranch size={13} />
           <span>Branch to IDE</span>
         </button>
 
         <button
           onClick={handlePin}
-          className="btn-cyber-glass"
-          style={{
-            flex: 1,
-            fontSize: 11,
-            padding: '6px 8px',
-            borderColor: pinned ? 'var(--neon-emerald)' : undefined,
-            color: pinned ? 'var(--neon-emerald)' : undefined,
-          }}
+          className={pinned ? 'adobe-btn-red' : 'adobe-btn-outline'}
+          style={{ flex: 1, height: 34, fontSize: 12, padding: '0 12px' }}
           title="Elevate this output to permanent project memory"
         >
-          <Database size={12} color={pinned ? 'var(--neon-emerald)' : 'var(--neon-amber)'} />
+          <Database size={13} />
           <span>{pinned ? 'Memory Ingested' : 'Pin as Memory'}</span>
         </button>
       </div>

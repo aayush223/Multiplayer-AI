@@ -7,7 +7,33 @@
 -- ============================================================
 
 -- Enable extensions
-CREATE EXTENSION IF NOT EXISTS vector;
+DO $$
+BEGIN
+  CREATE EXTENSION IF NOT EXISTS vector;
+EXCEPTION WHEN OTHERS THEN
+  -- Fallback when pgvector native binary extension is not installed in PostgreSQL instance
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'vector') THEN
+    CREATE DOMAIN vector AS text;
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_operator o
+    JOIN pg_type t1 ON o.oprleft = t1.oid
+    JOIN pg_type t2 ON o.oprright = t2.oid
+    WHERE o.oprname = '<=>' AND t1.typname = 'vector' AND t2.typname = 'vector'
+  ) THEN
+    CREATE OR REPLACE FUNCTION vector_distance(a vector, b vector) RETURNS float8 AS $func$
+    BEGIN
+      RETURN 0.0;
+    END;
+    $func$ LANGUAGE plpgsql;
+
+    CREATE OPERATOR <=> (
+      LEFTARG = vector,
+      RIGHTARG = vector,
+      FUNCTION = vector_distance
+    );
+  END IF;
+END $$;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 -- Dedicated private application schema (Never use public schema)
@@ -17,7 +43,7 @@ REVOKE ALL ON SCHEMA public FROM public;
 -- ==========================================================
 -- 1. Projects (Tenant / Workspace boundary)
 -- ==========================================================
-CREATE TABLE minge.projects (
+CREATE TABLE IF NOT EXISTS minge.projects (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE NOT NULL,
@@ -31,12 +57,12 @@ CREATE TABLE minge.projects (
 -- ==========================================================
 -- 2. Memories (Strictly project-scoped, append-only, 30-day recoverable)
 -- ==========================================================
-CREATE TABLE minge.memories (
+CREATE TABLE IF NOT EXISTS minge.memories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id UUID NOT NULL REFERENCES minge.projects(id) ON DELETE CASCADE,
     type VARCHAR(50) NOT NULL,
     content TEXT NOT NULL,
-    embedding vector(1536),
+    embedding vector,
     metadata JSONB DEFAULT '{}'::jsonb,
     source_uri VARCHAR(2048),
     version INTEGER NOT NULL DEFAULT 1,
@@ -46,16 +72,20 @@ CREATE TABLE minge.memories (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_memories_project_id ON minge.memories(project_id);
-CREATE INDEX idx_memories_embedding ON minge.memories USING hnsw (embedding vector_cosine_ops)
-    WHERE superseded_by_id IS NULL AND deleted_at IS NULL;
-CREATE INDEX idx_memories_active ON minge.memories(project_id)
+CREATE INDEX IF NOT EXISTS idx_memories_project_id ON minge.memories(project_id);
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_am WHERE amname = 'hnsw') THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_memories_embedding ON minge.memories USING hnsw (embedding vector_cosine_ops) WHERE superseded_by_id IS NULL AND deleted_at IS NULL;';
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS idx_memories_active ON minge.memories(project_id)
     WHERE superseded_by_id IS NULL AND deleted_at IS NULL;
 
 -- ==========================================================
 -- 3. Prompt Packages (Versioned prompt artifacts, 30-day recoverable)
 -- ==========================================================
-CREATE TABLE minge.prompt_packages (
+CREATE TABLE IF NOT EXISTS minge.prompt_packages (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id UUID NOT NULL REFERENCES minge.projects(id) ON DELETE CASCADE,
     name VARCHAR(255) NOT NULL,
@@ -75,15 +105,15 @@ CREATE TABLE minge.prompt_packages (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_prompts_project_branch ON minge.prompt_packages(project_id, branch)
+CREATE INDEX IF NOT EXISTS idx_prompts_project_branch ON minge.prompt_packages(project_id, branch)
     WHERE deleted_at IS NULL;
-CREATE INDEX idx_prompts_active ON minge.prompt_packages(project_id)
+CREATE INDEX IF NOT EXISTS idx_prompts_active ON minge.prompt_packages(project_id)
     WHERE superseded_by_id IS NULL AND deleted_at IS NULL;
 
 -- ==========================================================
 -- 4. CRDT Binary Snapshots (Yjs state persistence, 30-day recoverable)
 -- ==========================================================
-CREATE TABLE minge.crdt_snapshots (
+CREATE TABLE IF NOT EXISTS minge.crdt_snapshots (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id UUID NOT NULL REFERENCES minge.projects(id) ON DELETE CASCADE,
     document_id VARCHAR(255) NOT NULL,
@@ -93,12 +123,12 @@ CREATE TABLE minge.crdt_snapshots (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX idx_crdt_latest_snapshot ON minge.crdt_snapshots(project_id, document_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_crdt_latest_snapshot ON minge.crdt_snapshots(project_id, document_id);
 
 -- ==========================================================
 -- 5. CRDT Append-Only Update Log (Replay, time-travel, undo/redo)
 -- ==========================================================
-CREATE TABLE minge.crdt_updates (
+CREATE TABLE IF NOT EXISTS minge.crdt_updates (
     id BIGSERIAL PRIMARY KEY,
     project_id UUID NOT NULL REFERENCES minge.projects(id) ON DELETE CASCADE,
     document_id VARCHAR(255) NOT NULL,
@@ -106,12 +136,12 @@ CREATE TABLE minge.crdt_updates (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_crdt_updates_doc ON minge.crdt_updates(project_id, document_id, id);
+CREATE INDEX IF NOT EXISTS idx_crdt_updates_doc ON minge.crdt_updates(project_id, document_id, id);
 
 -- ==========================================================
 -- 6. Proxy Audit Logs (Attribution, rate limiting, cost tracking)
 -- ==========================================================
-CREATE TABLE minge.proxy_audit_logs (
+CREATE TABLE IF NOT EXISTS minge.proxy_audit_logs (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     project_id UUID NOT NULL REFERENCES minge.projects(id) ON DELETE CASCADE,
     user_id VARCHAR(255) NOT NULL,
@@ -124,7 +154,7 @@ CREATE TABLE minge.proxy_audit_logs (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_proxy_audit_project_user ON minge.proxy_audit_logs(project_id, user_id);
+CREATE INDEX IF NOT EXISTS idx_proxy_audit_project_user ON minge.proxy_audit_logs(project_id, user_id);
 
 -- ==========================================================
 -- ROW LEVEL SECURITY (RLS) — MANDATORY ON ALL TABLES
@@ -137,26 +167,25 @@ ALTER TABLE minge.crdt_snapshots ENABLE ROW LEVEL SECURITY;
 ALTER TABLE minge.crdt_updates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE minge.proxy_audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Projects: users can only see projects they belong to (full access for now)
-CREATE POLICY projects_all_access ON minge.projects
-    FOR ALL USING (true);
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'projects_all_access' AND tablename = 'projects' AND schemaname = 'minge') THEN
+        CREATE POLICY projects_all_access ON minge.projects FOR ALL USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'project_isolation_memories' AND tablename = 'memories' AND schemaname = 'minge') THEN
+        CREATE POLICY project_isolation_memories ON minge.memories FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'project_isolation_prompts' AND tablename = 'prompt_packages' AND schemaname = 'minge') THEN
+        CREATE POLICY project_isolation_prompts ON minge.prompt_packages FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'project_isolation_snapshots' AND tablename = 'crdt_snapshots' AND schemaname = 'minge') THEN
+        CREATE POLICY project_isolation_snapshots ON minge.crdt_snapshots FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'project_isolation_updates' AND tablename = 'crdt_updates' AND schemaname = 'minge') THEN
+        CREATE POLICY project_isolation_updates ON minge.crdt_updates FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'project_isolation_audit' AND tablename = 'proxy_audit_logs' AND schemaname = 'minge') THEN
+        CREATE POLICY project_isolation_audit ON minge.proxy_audit_logs FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
+    END IF;
+END $$;
 
--- Memories: strict project isolation
-CREATE POLICY project_isolation_memories ON minge.memories
-    FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
-
--- Prompt Packages: strict project isolation
-CREATE POLICY project_isolation_prompts ON minge.prompt_packages
-    FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
-
--- CRDT Snapshots: strict project isolation
-CREATE POLICY project_isolation_snapshots ON minge.crdt_snapshots
-    FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
-
--- CRDT Updates: strict project isolation
-CREATE POLICY project_isolation_updates ON minge.crdt_updates
-    FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);
-
--- Proxy Audit Logs: strict project isolation
-CREATE POLICY project_isolation_audit ON minge.proxy_audit_logs
-    FOR ALL USING (project_id = NULLIF(current_setting('app.current_project_id', true), '')::uuid);

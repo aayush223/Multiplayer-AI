@@ -12,6 +12,7 @@ import {
   searchMemories,
   supersedeMemory,
   softDeleteMemory,
+  restoreMemory,
   listMemories,
   getMemoryById,
   clearProjectMemories,
@@ -65,15 +66,18 @@ export async function memoryRoutes(app: FastifyInstance): Promise<void> {
     }
   );
 
-  // List active memories for a project
-  app.get<{ Params: { projectId: string }; Querystring: { limit?: string; offset?: string } }>(
+  // List active memories for a project (or include soft-deleted for 30-day recovery drawer)
+  app.get<{ Params: { projectId: string }; Querystring: { limit?: string; offset?: string; includeDeleted?: string } }>(
     '/api/projects/:projectId/memories',
     async (request, reply) => {
       const { projectId } = request.params;
-      const limit = parseInt(request.query.limit ?? '50', 10);
-      const offset = parseInt(request.query.offset ?? '0', 10);
+      const parsedLimit = parseInt(request.query.limit ?? '50', 10);
+      const parsedOffset = parseInt(request.query.offset ?? '0', 10);
+      const limit = Number.isFinite(parsedLimit) ? Math.min(Math.max(parsedLimit, 1), 200) : 50;
+      const offset = Number.isFinite(parsedOffset) ? Math.max(parsedOffset, 0) : 0;
+      const includeDeleted = request.query.includeDeleted === 'true';
 
-      const memories = await listMemories(projectId, limit, offset);
+      const memories = await listMemories(projectId, limit, offset, includeDeleted);
       reply.send({ data: memories, count: memories.length });
     }
   );
@@ -99,7 +103,7 @@ export async function memoryRoutes(app: FastifyInstance): Promise<void> {
     async (request, reply) => {
       const userId = getUserId(request);
       const { projectId, memoryId } = request.params;
-      const body = request.body as { content: string; metadata?: Record<string, unknown> };
+      const body = (request.body as { content?: string; metadata?: Record<string, unknown> } | undefined) ?? {};
 
       if (!body.content) {
         return reply.status(400).send({ error: 'content is required for supersede.' });
@@ -123,6 +127,33 @@ export async function memoryRoutes(app: FastifyInstance): Promise<void> {
       }
 
       reply.status(201).send({ data: newMemory });
+    }
+  );
+
+  // Restore a soft-deleted memory within the 30-day recovery window (Invariant 6)
+  app.post<{ Params: { projectId: string; memoryId: string } }>(
+    '/api/projects/:projectId/memories/:memoryId/restore',
+    async (request, reply) => {
+      const { projectId, memoryId } = request.params;
+      const restored = await restoreMemory(projectId, memoryId);
+
+      if (!restored) {
+        return reply.status(404).send({
+          error: 'Memory not found, not deleted, or outside the 30-day recovery window.',
+        });
+      }
+
+      reply.send({ data: restored, message: 'Memory restored successfully.' });
+    }
+  );
+
+  // Clear all project memories alias (PRD Section 5.7)
+  app.delete<{ Params: { projectId: string } }>(
+    '/api/projects/:projectId/memories/clear',
+    async (request, reply) => {
+      const { projectId } = request.params;
+      const count = await clearProjectMemories(projectId);
+      reply.send({ message: `Soft-deleted ${count} memories. Recoverable for 30 days.`, count });
     }
   );
 

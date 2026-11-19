@@ -8,7 +8,7 @@
  * Invariant 7: Dedicated `minge` schema. search_path is set on every connection.
  */
 import pg from 'pg';
-import { readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -22,14 +22,10 @@ export function getPool(): pg.Pool {
   if (!pool) {
     pool = new Pool({
       connectionString: process.env['DATABASE_URL'],
+      options: '-c search_path=minge,public',
       max: 20,
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 5_000,
-    });
-
-    // Set search_path to minge schema on every new connection
-    pool.on('connect', (client: pg.PoolClient) => {
-      client.query('SET search_path TO minge, public;');
     });
   }
   return pool;
@@ -53,9 +49,15 @@ export async function withProjectScope<T>(
 
   const client = await getPool().connect();
   try {
-    // Set the RLS context variable for this session
-    await client.query(`SET LOCAL app.current_project_id = '${projectId}'`);
-    return await callback(client);
+    await client.query('BEGIN');
+    // Parameterized transaction-local RLS context (prevents SQL injection & persists across transaction)
+    await client.query(`SELECT set_config('app.current_project_id', $1, true)`, [projectId]);
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
   } finally {
     client.release();
   }
@@ -70,13 +72,24 @@ export async function query(text: string, params?: unknown[]): Promise<pg.QueryR
 }
 
 /**
- * Run the schema migration from schema.sql
+ * Run the base schema and all ordered SQL migrations in migrations/.
  */
 export async function migrate(): Promise<void> {
   const schemaPath = resolve(__dirname, 'schema.sql');
   const sql = readFileSync(schemaPath, 'utf-8');
   await getPool().query(sql);
-  console.log('[db] Schema migration completed successfully.');
+
+  const migrationsDir = resolve(__dirname, 'migrations');
+  if (existsSync(migrationsDir)) {
+    const files = readdirSync(migrationsDir)
+      .filter((f) => f.endsWith('.sql'))
+      .sort();
+    for (const file of files) {
+      const migrationSql = readFileSync(resolve(migrationsDir, file), 'utf-8');
+      await getPool().query(migrationSql);
+    }
+  }
+  console.log('[db] Schema and migrations completed successfully.');
 }
 
 /**
