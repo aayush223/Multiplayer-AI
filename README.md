@@ -1,94 +1,34 @@
 # MinGE AI — Multiplayer AI Platform
 
-**MinGE AI** is a real-time multiplayer AI workspace that unites a Git-shaped **Prompt IDE**, an infinite **Spatial AI Canvas**, and **Role-Based Team Hierarchy & Ticket Approvals** on a shared Yjs CRDT and PostgreSQL Row Level Security (RLS) backend.
+**MinGE AI** is a real-time multiplayer AI workspace that unites a Git-shaped **Prompt IDE**, an infinite **Spatial AI Canvas**, and **Role-Based Team Hierarchy & Ticket Approvals** on a shared Yjs CRDT and PostgreSQL Row Level Security (RLS) foundation.
+
+It is designed for teams and organizations that want to build, test, and collaborate with AI in shared real-time workspaces without context bleed across projects or uncontrolled changes to production work.
 
 ---
 
-## Key Features
+## What the Project Is
 
-- **Dual Collaborative Surfaces**:
-  - **Prompt IDE**: Branching (`main`, `exp/*`), side-by-side prompt diffs, versioned immutable prompt packages (`system_prompt`, `user_template`, `model_config`, `grounded_memory_ids`), and grounded AI chat.
-  - **Spatial AI Canvas**: Real-time multiplayer infinite canvas with live cursors, Prompt Nodes, AI Output Nodes, Document Drops, and Memory Capsules synced over Yjs CRDTs.
-- **Role-Based Team Hierarchy & Ticket Approval Gate**:
-  - **3-Tier Hierarchy (`Admin → Manager → Employee`)**: Managers have full freedom to govern their reporting tree—reassign employees, configure daily AI token caps, toggle permissions, and pause/resume workspace access.
-  - **Ticket-to-Main Workflow**: Employees raise work approval tickets from the Prompt IDE or AI Canvas; managers review, optionally override payloads, request changes, or click **Approve & Add to Main Work** to atomically publish a versioned package onto `main`.
-- **Multiplayer CRDT & Fenced AI Peer Architecture**:
-  - Flat `Y.Map` document schema with deterministic cycle-breaking mutable tree projection (`resolveTree`), ASCII Base-62 fractional indexing with `clientId` tie-breakers, and tombstone-wins soft-deletes.
-  - 3-tier AI concurrency locking: Yjs Awareness UI guard, Redis lease (`SET NX EX 60`) + monotonic fencing token (`INCR`), and attributed `'ai-peer:<jobId>'` Yjs transactions that preserve human `Y.UndoManager` stacks.
-- **Zero-Bleed Security & 30-Day Recovery**:
-  - Mandatory PostgreSQL Row Level Security (RLS) in private schema `minge` with fail-closed `project_id` query builders.
-  - Append-only memories & prompt packages (`superseded_by_id`) and a 30-day soft-delete recovery vault (`deleted_at`).
-  - Zero frontend API keys—all LLM provider keys (`OpenAI`, `Gemini`, `OpenRouter`, `Groq`, `Ollama`) remain strictly server-side with per-user `X-User-Id` audit logging.
+MinGE solves two core challenges in team AI workflows: **fragmented single-player prompting** and **lack of organizational governance**. Instead of isolated chat threads, MinGE provides structured, versioned, and role-governed workspaces where humans and AI collaborate as real-time peers.
 
----
+### 1. Dual Collaborative Workspaces
+- **Prompt IDE**: A structured engineering environment for creating, testing, and versioning AI prompts as immutable **Prompt Packages** (`system_prompt`, `user_template`, `model_config`, `grounded_memory_ids`, and output lineage). Users can create experimental branches (`exp/*`), compare changes in a side-by-side diff view against `main`, and test responses grounded strictly in project memory.
+- **Spatial AI Canvas**: A synchronous multiplayer infinite canvas with live peer cursors, connected Prompt Nodes, AI Output Nodes, Document Drops, and Memory Capsules. Multiple teammates can steer AI generations simultaneously while ideas flow seamlessly between the Canvas and the Prompt IDE.
 
-## Architecture & Monorepo Structure
+### 2. Role-Based Team Hierarchy & Ticket Approval Gate
+- **Organizational Hierarchy (`Admin → Manager → Employee`)**: Workspaces model real reporting lines where managers have full operational freedom over their team—assigning tasks, configuring employee permissions, setting daily AI token caps, reassigning direct reports, and pausing or resuming access.
+- **Ticket-to-Main Governance**: Employees experiment freely on branches and canvas nodes and **raise approval tickets** to propose adding their work to production. Tickets route automatically to the employee's manager, who can inspect diffs, refine the payload, request changes, or click **Approve & Add to Main Work** to atomically publish a new version onto `main`.
 
-```text
-minge/
-├── apps/
-│   └── web/                  # React + Vite frontend (Hero, Login, Team & Tickets, Prompt IDE, AI Canvas)
-├── packages/
-│   ├── crdt-core/            # Flat Yjs schema, fractional indexing & deterministic resolveTree()
-│   └── shared/               # Shared Zod schemas, room ID parsers & TypeScript contracts
-├── services/
-│   ├── backend-api/          # Fastify REST API, JWT auth, Team/Ticket governance, LLM Proxy & Postgres RLS
-│   ├── sync-gateway/         # Authenticated Yjs WebSocket Gateway + Snapshot/Delta store + Redis Pub/Sub
-│   └── sync-server/          # Local Yjs WebSocket sync server
-├── docs/
-│   └── terms_and_conditions_v0.1.md
-├── tests/                    # Vitest suites (CRDT convergence, sync gateway, AI fencing, team hierarchy, RLS)
-└── lisence.md                # Project license specification & tier options
-```
+### 3. Multiplayer CRDT & Fenced AI Peer Engine
+- **Conflict-Free Hierarchy & Ordering**: Built on Yjs CRDTs using a flat `Y.Map` document schema, deterministic cycle-breaking tree projection (`resolveTree`), and Base-62 fractional sibling indexing so concurrent moves or edits across peers always converge to an identical valid state.
+- **AI as a Collaborative Peer**: A 3-tier concurrency lock (Yjs Awareness UI lock, Redis lease with monotonic fencing tokens, and attributed `'ai-peer:<jobId>'` transactions) prevents duplicate LLM calls and ensures streamed AI outputs never corrupt human undo stacks.
 
----
-
-## Quick Start
-
-### 1. Prerequisites
-- **Node.js** `>= 20.0.0`
-- **PostgreSQL 16** (with `pgvector` optional; automatic fallback domain is included) and **Redis 7** (optional for local single-node dev; in-memory adapters included)
-
-### 2. Install & Configure
-```bash
-npm install
-cp .env.example .env
-```
-
-*(Optional)* Start PostgreSQL & Redis via Docker:
-```bash
-docker compose up -d
-```
-
-### 3. Run the Full Stack
-```bash
-npx concurrently --names "api,sync,gateway,web" "npm:dev:api" "npm:dev:sync" "npm:dev:gateway" "npm:dev:web"
-```
-
-| Service | Local URL | Description |
-| :--- | :--- | :--- |
-| **Web App** | `http://localhost:5173` | Hero Page, Login, Team & Tickets, Prompt IDE, AI Canvas |
-| **Backend API** | `http://localhost:3000` | REST API, JWT Auth, Team Hierarchy, Fenced AI Generation & LLM Proxy |
-| **Sync Gateway** | `ws://localhost:4001` | Fail-closed JWT/Project-Key Yjs WebSocket Gateway |
-| **Sync Server** | `ws://localhost:4000` | Local Yjs WebSocket Server |
-
----
-
-## Verification & Testing
-
-```bash
-# TypeScript strict typecheck across all workspaces
-npm run lint
-
-# Production build across all 6 workspaces
-npm run build
-
-# Run full Vitest test suite (8 test suites, 56 tests)
-npm test
-```
+### 4. Zero-Bleed Memory Isolation & 30-Day Recovery
+- **Strict Tenant & Project Isolation**: Every memory item, prompt package, CRDT snapshot, and work ticket is scoped by a mandatory `project_id` enforced at the database layer via PostgreSQL Row Level Security (RLS) inside a dedicated `minge` schema. Queries fail closed if project context is missing.
+- **Append-Only Lineage & Soft-Delete Vault**: Updates never overwrite prior memory or prompt rows in place (`superseded_by_id`), and all deletions use soft-delete tombstones (`deleted_at`) with a **30-day recovery window**.
+- **Server-Side Model Gateway**: Provider credentials (`OpenAI`, `Gemini`, `OpenRouter`, `Groq`, `Ollama`) remain strictly on the backend with per-user attribution and quota auditing.
 
 ---
 
 ## License
 
-See [lisence.md](./lisence.md) for the brief project license terms and deployment options (**Community Open-Core MIT**, **Team Hierarchy License**, and **Enterprise Compliance License**), and [docs/terms_and_conditions_v0.1.md](./docs/terms_and_conditions_v0.1.md) for full platform terms.
+See [lisence.md](./lisence.md) for the brief project license terms and deployment options, and [docs/terms_and_conditions_v0.1.md](./docs/terms_and_conditions_v0.1.md) for platform terms and conditions.
