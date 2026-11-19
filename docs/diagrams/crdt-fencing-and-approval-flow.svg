@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 480" width="960" height="480" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <rect width="960" height="480" fill="#FFFFFF"/>
+  <rect x="16" y="16" width="928" height="448" rx="8" fill="#F7F7F7" stroke="#E5E7EB" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <rect x="16" y="16" width="928" height="48" rx="8" fill="#000000"/>
+  <text x="480" y="45" fill="#FFFFFF" font-size="14" font-weight="800" text-anchor="middle">Prior Art Fig. 2 — (Left) 3-Tier Fenced AI Peer CRDT Write Flow &amp; (Right) Cycle-Free Mutable Tree &amp; Ticket Merge</text>
+
+  <!-- Left Panel: 3-Tier Fenced AI Peer Execution -->
+  <rect x="36" y="82" width="430" height="362" rx="6" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+  <text x="251" y="108" fill="#000000" font-size="13.5" font-weight="800" text-anchor="middle">Method A: 3-Tier Fenced AI Peer CRDT Execution</text>
+
+  <rect x="64" y="124" width="374" height="48" rx="4" fill="#F7F7F7" stroke="#000000" stroke-width="1.5"/>
+  <text x="251" y="145" fill="#000000" font-size="12" font-weight="700" text-anchor="middle">Tier 1: Yjs Awareness Broadcast ({ nodeId, state: 'generating' })</text>
+  <text x="251" y="161" fill="#4D4D4D" font-size="11" text-anchor="middle">Peers immediately render lock badge &amp; disable duplicate UI triggers</text>
+
+  <line x1="251" y1="172" x2="251" y2="190" stroke="#000000" stroke-width="1.5"/>
+
+  <rect x="64" y="190" width="374" height="58" rx="4" fill="#F7F7F7" stroke="#EB1000" stroke-width="1.5"/>
+  <text x="251" y="211" fill="#000000" font-size="12" font-weight="700" text-anchor="middle">Tier 2: Quota Check → SET lock:ai:proj:node jobId NX EX 60</text>
+  <text x="251" y="227" fill="#4D4D4D" font-size="11" text-anchor="middle">If NX fails → HTTP 409 Conflict { activeJobId } (Zero duplicate LLM call)</text>
+  <text x="251" y="241" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">If acquired → fencingToken = INCR fence:ai:proj:node</text>
+
+  <line x1="251" y1="248" x2="251" y2="266" stroke="#000000" stroke-width="1.5"/>
+
+  <rect x="64" y="266" width="374" height="62" rx="4" fill="#F7F7F7" stroke="#000000" stroke-width="1.5"/>
+  <text x="251" y="287" fill="#000000" font-size="12" font-weight="700" text-anchor="middle">Tier 3: Pre-Chunk Fence Check (GET fence == fencingToken?)</text>
+  <text x="251" y="303" fill="#4D4D4D" font-size="11" text-anchor="middle">• Match: doc.transact(() =&gt; text.insert(pos, chunk), 'ai-peer:' + jobId)</text>
+  <text x="251" y="319" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">• Mismatch (Stale Worker): Abort immediately (409 Fenced Out)</text>
+
+  <line x1="251" y1="328" x2="251" y2="346" stroke="#000000" stroke-width="1.5"/>
+
+  <rect x="64" y="346" width="374" height="76" rx="4" fill="#1A1A1A"/>
+  <text x="251" y="368" fill="#FFFFFF" font-size="12" font-weight="700" text-anchor="middle">Finalize &amp; Human Undo Isolation</text>
+  <text x="251" y="386" fill="#E5E7EB" font-size="11" text-anchor="middle">• Human Y.UndoManager tracks only local origin → AI edits never hijack undo</text>
+  <text x="251" y="402" fill="#E5E7EB" font-size="11" text-anchor="middle">• Log node_id, job_id, fencing_token to minge.proxy_audit_logs</text>
+  <text x="251" y="416" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">• Atomic Lua compare-and-delete lock release (GET == jobId → DEL)</text>
+
+  <!-- Right Panel: Cycle-Free Tree Resolution & Ticket Approval Gate -->
+  <rect x="494" y="82" width="430" height="362" rx="6" fill="#FFFFFF" stroke="#E5E7EB" stroke-width="1.5"/>
+  <text x="709" y="108" fill="#000000" font-size="13.5" font-weight="800" text-anchor="middle">Method B &amp; C: Cycle-Free CRDT Tree &amp; Ticket-to-Main Gate</text>
+
+  <rect x="522" y="124" width="374" height="86" rx="4" fill="#F7F7F7" stroke="#000000" stroke-width="1.5"/>
+  <text x="709" y="145" fill="#000000" font-size="12" font-weight="700" text-anchor="middle">1. Pure Read-Only Mutable Tree Projection: resolveTree(nodes)</text>
+  <text x="709" y="163" fill="#4D4D4D" font-size="11" text-anchor="middle">• Each node stores parentEdges: Y.Map&lt;parentId, monotonicCounter&gt;</text>
+  <text x="709" y="179" fill="#4D4D4D" font-size="11" text-anchor="middle">• Concurrent cycle (A→B vs B→A): lowest (counter, nodeId) edge yields</text>
+  <text x="709" y="195" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">• Tombstone-Wins: Any ancestor deletedAt !== null hides subtree (30d restore)</text>
+
+  <line x1="709" y1="210" x2="709" y2="230" stroke="#000000" stroke-width="1.5"/>
+
+  <rect x="522" y="230" width="374" height="74" rx="4" fill="#F7F7F7" stroke="#000000" stroke-width="1.5"/>
+  <text x="709" y="251" fill="#000000" font-size="12" font-weight="700" text-anchor="middle">2. Employee Raises Work Ticket (minge.work_tickets)</text>
+  <text x="709" y="269" fill="#4D4D4D" font-size="11" text-anchor="middle">• Captures branch snapshot (system_prompt, user_template, model_config)</text>
+  <text x="709" y="285" fill="#4D4D4D" font-size="11" text-anchor="middle">• Auto-routes to employee's reporting manager_id in minge.project_members</text>
+
+  <line x1="709" y1="304" x2="709" y2="324" stroke="#000000" stroke-width="1.5"/>
+
+  <rect x="522" y="324" width="374" height="98" rx="4" fill="#1A1A1A"/>
+  <text x="709" y="346" fill="#FFFFFF" font-size="12" font-weight="700" text-anchor="middle">3. Manager Override &amp; Atomic Merge to Main Work</text>
+  <text x="709" y="364" fill="#E5E7EB" font-size="11" text-anchor="middle">• Enforces role authority (Admin / Manager / delegated canApproveTickets)</text>
+  <text x="709" y="380" fill="#E5E7EB" font-size="11" text-anchor="middle">• Inserts new version v(N+1) into minge.prompt_packages (branch = 'main')</text>
+  <text x="709" y="396" fill="#E5E7EB" font-size="11" text-anchor="middle">• Sets superseded_by_id on prior v(N) row (Append-Only Immutability)</text>
+  <text x="709" y="412" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">• Links merged_package_id on work_ticket inside single RLS transaction</text>
+</svg>

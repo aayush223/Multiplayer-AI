@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" width="960" height="540" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <rect width="960" height="540" fill="#FFFFFF"/>
+  <rect x="16" y="16" width="928" height="508" rx="8" fill="#F7F7F7" stroke="#E5E7EB" stroke-width="1.5"/>
+
+  <!-- Header -->
+  <rect x="16" y="16" width="928" height="52" rx="8" fill="#000000"/>
+  <rect x="32" y="30" width="24" height="24" rx="4" fill="#EB1000"/>
+  <text x="44" y="47" fill="#FFFFFF" font-size="14" font-weight="900" text-anchor="middle">M</text>
+  <text x="68" y="47" fill="#FFFFFF" font-size="15" font-weight="800">MinGE AI — 4-Layer Multiplayer CRDT, Fenced AI Peer &amp; RLS Architecture (Prior Art Fig. 1)</text>
+
+  <!-- Layer 1: Client Surfaces -->
+  <rect x="44" y="92" width="260" height="96" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+  <rect x="44" y="92" width="260" height="6" fill="#EB1000"/>
+  <text x="174" y="120" fill="#000000" font-size="14" font-weight="800" text-anchor="middle">1A. Spatial AI Canvas (Browser)</text>
+  <text x="174" y="140" fill="#4D4D4D" font-size="11.5" text-anchor="middle">Flat Y.Map Nodes + resolveTree() Projection</text>
+  <text x="174" y="158" fill="#4D4D4D" font-size="11.5" text-anchor="middle">Base-62 Fractional SortKeys + Live Cursors</text>
+  <text x="174" y="176" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">Local Y.UndoManager (Human Origin Only)</text>
+
+  <rect x="348" y="92" width="260" height="96" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+  <rect x="348" y="92" width="260" height="6" fill="#000000"/>
+  <text x="478" y="120" fill="#000000" font-size="14" font-weight="800" text-anchor="middle">1B. Git-Shaped Prompt IDE</text>
+  <text x="478" y="140" fill="#4D4D4D" font-size="11.5" text-anchor="middle">Immutable Versioned Prompt Packages</text>
+  <text x="478" y="158" fill="#4D4D4D" font-size="11.5" text-anchor="middle">Branching (exp/* vs main) &amp; Split Diffs</text>
+  <text x="478" y="176" fill="#000000" font-size="11" font-weight="700" text-anchor="middle">Top-K Project-Scoped Memory Grounding</text>
+
+  <rect x="652" y="92" width="264" height="96" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+  <rect x="652" y="92" width="264" height="6" fill="#EB1000"/>
+  <text x="784" y="120" fill="#000000" font-size="14" font-weight="800" text-anchor="middle">1C. Team Hierarchy &amp; Ticket Gate</text>
+  <text x="784" y="140" fill="#4D4D4D" font-size="11.5" text-anchor="middle">Admin → Manager → Employee Tree</text>
+  <text x="784" y="158" fill="#4D4D4D" font-size="11.5" text-anchor="middle">Employee Raises Ticket → Manager Override</text>
+  <text x="784" y="176" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">Atomic Approve &amp; Merge to Main Work</text>
+
+  <!-- Arrows Layer 1 -> Layer 2 -->
+  <line x1="174" y1="188" x2="250" y2="236" stroke="#000000" stroke-width="2"/>
+  <line x1="478" y1="188" x2="360" y2="236" stroke="#000000" stroke-width="2"/>
+  <line x1="478" y1="188" x2="640" y2="236" stroke="#000000" stroke-width="2"/>
+  <line x1="784" y1="188" x2="730" y2="236" stroke="#000000" stroke-width="2"/>
+
+  <!-- Layer 2: Sync Gateway & Backend API -->
+  <rect x="44" y="236" width="420" height="114" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+  <text x="254" y="262" fill="#000000" font-size="14" font-weight="800" text-anchor="middle">2A. Authenticated Yjs Sync Gateway (services/sync-gateway)</text>
+  <text x="254" y="282" fill="#4D4D4D" font-size="11.5" text-anchor="middle">• Scoped Rooms: ${project_id}:${document_id}</text>
+  <text x="254" y="300" fill="#4D4D4D" font-size="11.5" text-anchor="middle">• Fail-Closed WebSocket Upgrade (401/403 before Y.Doc hydration)</text>
+  <text x="254" y="318" fill="#4D4D4D" font-size="11.5" text-anchor="middle">• Snapshot Hydration + Delta Replay (id &gt; last_update_id)</text>
+  <text x="254" y="336" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">• Internal Fenced AI Peer Write Endpoint (origin: 'ai-peer:&lt;jobId&gt;')</text>
+
+  <rect x="496" y="236" width="420" height="114" rx="6" fill="#FFFFFF" stroke="#000000" stroke-width="2"/>
+  <text x="706" y="262" fill="#000000" font-size="14" font-weight="800" text-anchor="middle">2B. Backend API &amp; Fenced AI Worker (services/backend-api)</text>
+  <text x="706" y="282" fill="#4D4D4D" font-size="11.5" text-anchor="middle">• Mandatory JWT Bearer Auth + X-User-Id Attribution</text>
+  <text x="706" y="300" fill="#4D4D4D" font-size="11.5" text-anchor="middle">• Per-Project Token &amp; Rate Quota Check Before Lease Acquisition</text>
+  <text x="706" y="318" fill="#4D4D4D" font-size="11.5" text-anchor="middle">• Server-Side Multi-Provider LLM Proxy (Zero Client API Keys)</text>
+  <text x="706" y="336" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">• Pre-Chunk Fencing Verification Before Emitting to Sync Gateway</text>
+
+  <!-- Horizontal Bridge 2B -> 2A -->
+  <line x1="496" y1="293" x2="464" y2="293" stroke="#EB1000" stroke-width="2.5" stroke-dasharray="4 2"/>
+
+  <!-- Arrows Layer 2 -> Layer 3 -->
+  <line x1="254" y1="350" x2="254" y2="394" stroke="#000000" stroke-width="2"/>
+  <line x1="360" y1="350" x2="620" y2="394" stroke="#000000" stroke-width="2"/>
+  <line x1="706" y1="350" x2="706" y2="394" stroke="#000000" stroke-width="2"/>
+  <line x1="600" y1="350" x2="340" y2="394" stroke="#000000" stroke-width="2"/>
+
+  <!-- Layer 3: Persistence & Coordination -->
+  <rect x="44" y="394" width="420" height="106" rx="6" fill="#1A1A1A" stroke="#000000" stroke-width="2"/>
+  <text x="254" y="420" fill="#FFFFFF" font-size="14" font-weight="800" text-anchor="middle">3A. PostgreSQL 16 (Dedicated Private Schema: minge.*)</text>
+  <text x="254" y="440" fill="#E5E7EB" font-size="11.5" text-anchor="middle">• Mandatory Row Level Security (RLS) via set_config('app.current_project_id')</text>
+  <text x="254" y="458" fill="#E5E7EB" font-size="11.5" text-anchor="middle">• Tables: projects, memories, prompt_packages, crdt_snapshots, crdt_updates</text>
+  <text x="254" y="476" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">• Tables: project_members, work_tickets, project_quotas, proxy_audit_logs</text>
+
+  <rect x="496" y="394" width="420" height="106" rx="6" fill="#1A1A1A" stroke="#000000" stroke-width="2"/>
+  <text x="706" y="420" fill="#FFFFFF" font-size="14" font-weight="800" text-anchor="middle">3B. Redis 7 Coordination Plane (Pub/Sub + AI Fencing)</text>
+  <text x="706" y="440" fill="#E5E7EB" font-size="11.5" text-anchor="middle">• Binary CRDT Pub/Sub Fanout: minge:crdt:${project_id}:${doc_id}</text>
+  <text x="706" y="458" fill="#E5E7EB" font-size="11.5" text-anchor="middle">• Distributed Node Lease: SET lock:ai:${projectId}:${nodeId} ${jobId} NX EX 60</text>
+  <text x="706" y="476" fill="#EB1000" font-size="11" font-weight="700" text-anchor="middle">• Monotonic Fencing Counter: INCR fence:ai:${projectId}:${nodeId} + Lua Release</text>
+</svg>

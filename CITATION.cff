@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+message: "If you reference this software or defensive publication, please cite it using the metadata below."
+title: "MinGE AI: Multiplayer AI Platform with Cycle-Free CRDT Projections, Fenced AI Peer Execution, and Role-Gated Prompt Governance"
+abstract: "Enabling technical implementation and defensive prior-art publication of a multi-tenant collaborative AI platform uniting a Git-shaped Prompt IDE, a real-time Spatial AI Canvas, a cycle-free flat-map Yjs CRDT synchronization gateway, a 3-tier Redis-fenced AI peer streaming engine, fail-closed PostgreSQL Row Level Security project memory isolation, and a hierarchical Admin-Manager-Employee ticket approval pipeline."
+authors:
+  - name: "MinGE AI Engineering Team"
+repository-code: "https://github.com/aayush223/Multiplayer-AI"
+url: "https://github.com/aayush223/Multiplayer-AI"
+license: "Apache-2.0 AND MIT"
+version: "1.0.0"
+date-released: "2026-11-20"
+keywords:
+  - "multiplayer-ai"
+  - "crdt"
+  - "yjs"
+  - "fencing-tokens"
+  - "prompt-ide"
+  - "spatial-canvas"
+  - "row-level-security"
+  - "prior-art"

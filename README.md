@@ -29,6 +29,14 @@ MinGE solves two core challenges in team AI workflows: **fragmented single-playe
 
 ---
 
+## Technical Specification & Defensive Prior Art
+
+For the complete enabling technical disclosure, system architecture diagrams (committed SVG flowcharts), step-by-step algorithms, and claimed alternative embodiments, see [**TECHNICAL_SPEC.md**](./TECHNICAL_SPEC.md):
+
+![MinGE AI 4-Layer Architecture](./docs/diagrams/architecture-overview.svg)
+
+---
+
 ## License
 
-See [lisence.md](./lisence.md) for the brief project license terms and deployment options, and [docs/terms_and_conditions_v0.1.md](./docs/terms_and_conditions_v0.1.md) for platform terms and conditions.
+See [LICENSE](./LICENSE) (Apache 2.0 with defensive patent grant), [lisence.md](./lisence.md) for project license tiers and deployment options, [CITATION.cff](./CITATION.cff) for archival citation metadata, and [docs/terms_and_conditions_v0.1.md](./docs/terms_and_conditions_v0.1.md) for platform terms and conditions.
